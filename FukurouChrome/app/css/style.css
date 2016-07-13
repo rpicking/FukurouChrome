@@ -1,0 +1,27 @@
+html,
+body {
+    padding: 0;
+    margin: 0;
+    background-color: #ffffff;
+}
+
+.extension {
+  width: 400px;
+  clear: left;
+}
+.extension.stream {
+color:#000000;
+font-family: 'PTSansNarrowBold';
+font-size:18px;
+margin-top: 7px;
+margin-bottom: 0px;
+text-decoration:none;
+display: inline-block;
+padding: 4px;
+border-bottom-style: dashed;
+border-bottom-width: 1px;
+border-bottom-color: #a2a2a2;
+}
+.extension.stream:hover {
+  background-color: #d1e0e0;
+}
