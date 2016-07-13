@@ -5,23 +5,44 @@ body {
     background-color: #ffffff;
 }
 
-.extension {
+#extension {
   width: 400px;
+  border:1px solid black;
+  overflow: auto;
+  box-sizing:border-box;
+  padding-left: 10px;
+  padding-bottom: 20px;
+  
+}
+.game {
+  font-size:14px;
+  width: 100%;
+  box-sizing: border-box;
   clear: left;
+  padding-top: 20px;
+  padding-right: 6px;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-bottom-color: #a2a2a2;
 }
-.extension.stream {
-color:#000000;
-font-family: 'PTSansNarrowBold';
-font-size:18px;
-margin-top: 7px;
-margin-bottom: 0px;
-text-decoration:none;
-display: inline-block;
-padding: 4px;
-border-bottom-style: dashed;
-border-bottom-width: 1px;
-border-bottom-color: #a2a2a2;
+
+.game.stream {
+  color: #000000;
+  font-family: 'PTSansNarrowBold';
+  font-size:13px;
+  margin-top: 7px;
+  text-decoration:none;
+  display: inline-block;
+  padding-top: 4px;
+  padding-left: 10px;
+  border-bottom-style: dashed;
+  border-bottom-width: 1px;
+  border-bottom-color: #a2a2a2;
 }
-.extension.stream:hover {
+.game.stream:hover {
   background-color: #d1e0e0;
+}
+
+#vacant {
+  text-align: center;
 }
