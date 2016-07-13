@@ -3,11 +3,12 @@
 
   "name": "Fukurou",
   "description": "Fukurou Stuff",
-  "version": "0.0.2",
+  "version": "0.0.3",
 
   "background": {
-    "scripts": ["js/background.js"]
+    "scripts": [ "js/background.js" ]
   },
+  "options_page": "options.html",
   "permissions": [
     "https://api.twitch.tv/*",
     "tabs"

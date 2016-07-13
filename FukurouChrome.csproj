@@ -44,6 +44,7 @@
     <Content Include="app\js\background.js" />
     <Content Include="app\js\jquery.min.js" />
     <Content Include="app\js\popup.js" />
+    <Content Include="app\options.html" />
     <Content Include="app\popup.html" />
     <Content Include="Properties\build\lib\Ionic.Zip.DLL" />
     <Content Include="Properties\build\lib\MSBuild.ExtensionPack.dll" />
@@ -51,6 +52,7 @@
     <Content Include="index.htm" />
     <Content Include="Properties\build\ligershark.chrome.targets" />
     <Content Include="screenshots\readme.txt" />
+    <Content Include="README.md" />
     <None Include="scripts\_references.js" />
     <None Include="scripts\chrome-api-vsdoc.js" />
   </ItemGroup>

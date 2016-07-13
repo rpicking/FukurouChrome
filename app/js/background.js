@@ -1,15 +1,14 @@
-var online = [];
+var content = new Content();
 var htmlContent = '';
 
-function setHTML() {
-    console.log(htmlContent)
-}
-
-
 function start() {
+    console.log("START");
     var follows = "https://api.twitch.tv/kraken/users/VangardMk/follows/channels?limit=100"
     var games = "https://api.twitch.tv/kraken/games/top"
+
+    content.clear();
     htmlContent = '';
+
     fetch(follows)
         .then(
             function (response) {
@@ -34,16 +33,12 @@ function start() {
                                     response.json().then(function (data) {
                                         stream = data.stream;
                                         if (stream !== null) {     // channel is live
-                                            console.log(stream);
-                                            index = online.indexOf(stream.channel.name);
-                                            if (index == -1) { // not already displayed
-                                                online.push(name);
-                                                createStreamElement(stream);
-                                                console.log(online);
-                                            }
-                                        }
-                                        else {      // check to remove offline streamers
-
+                                            var name = stream.channel.display_name;
+                                            var viewers = stream.viewers;
+                                            var url = stream.channel.url;
+                                            var game = stream.game;
+                                            content.addStream(name, viewers, url, game);
+                                            htmlContent += content.createHTML();
                                         }
                                     });
                                 }
@@ -61,17 +56,6 @@ function start() {
 }
 
 
-function createStreamElement(stream) {
-    htmlContent += '<a class="extension stream" target="_blank" style="float:left" href="' + stream.channel.url + '">' + stream.channel.display_name + '<span style="float:right;">' + stream.viewers + '</span></a>';
-    
-}
-
-
-function getContent() {
-    return htmlContent;
-}
-
-
 // Class for stream data asked for by popup
 // Content.games
 //    Game.streams
@@ -82,6 +66,7 @@ function Content() {
 }
 
 Content.prototype.addStream = function (name, views, link, game) {
+    game = game.toUpperCase();
     var index = 0;
     if (this.total == 0) {     // no games
         this.games.push(new Game(game));
@@ -89,18 +74,22 @@ Content.prototype.addStream = function (name, views, link, game) {
     else {
         index = this.searchGame(game);
         if (index == -1) {   // game not already in list
+            console.log("SOMETHINGS FUCKY");
             index = this.games.length;
             this.games.push(new Game(game));
         }
     }
 
-    this.games[index].streams.push(new Stream(name, views, link));
+    if (!this.games[index].checkDuplicate(name)) {  // if no duplicate
+        this.games[index].streams.push(new Stream(name, views, link));
+    }
+
     this.total += 1;
 }
 
 Content.prototype.searchGame = function (game) {
     for (var i = 0; i < this.total; ++i) {
-        if (this.games[i].game == game) {
+        if (!this.games[i].game.localeCompare(game)) {
             return i;
         }
     }
@@ -110,13 +99,16 @@ Content.prototype.searchGame = function (game) {
 
 // creates html for all games in this.games
 Content.prototype.createHTML = function () {
+    console.log(this.games);
     var html = '';
     if (this.total == 0) {  // no current games
         html = '<p id="vacant"> No streams online</p>';
     }
     else {
         for (var i = 0; i < this.total; ++i) {  //loop through games
-            html += '<div class="game">' + this.games[i].game + '<hr>';
+            console.log(this.games[i]);
+            var game = this.games[i].game;
+            html += '<div class="game">' + game + '<hr>';
 
             html += this.games[i].createHTML();
             html += '</div>';
@@ -126,10 +118,16 @@ Content.prototype.createHTML = function () {
     return html;
 }
 
+Content.prototype.clear = function () {
+    for (var i = 0; i < this.games.length; ++i) {
+        this.games[i].clear();
+    }
+    this.games.splice(0, this.games.length);
+}
 
 // class for game
 function Game(game) {
-    this.game = game.toUpperCase();
+    this.game = game;
     this.streams = [];
 }
 
@@ -143,6 +141,21 @@ Game.prototype.createHTML = function () {
     }
 
     return html;
+}
+
+// Returns true if match found
+Game.prototype.checkDuplicate = function(name) {
+    //check for duplicate
+    for (var i = 0; i < this.streams.length; ++i) {
+        if (!this.streams[i].name.localeCompare(name)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+Game.prototype.clear = function () {
+    this.streams.splice(0, this.streams.length);
 }
 
 

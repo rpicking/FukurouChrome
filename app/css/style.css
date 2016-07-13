@@ -4,6 +4,14 @@ body {
     margin: 0;
     background-color: #ffffff;
 }
+hr {
+  margin: 0px;
+}
+hr.hr1 {
+  border: 0;
+  border-top: 1px dashed #8c8c8c;
+  margin-top: 2px;
+}
 
 #extension {
   width: 400px;
@@ -15,29 +23,23 @@ body {
   
 }
 .game {
+  font-family: 'Verdana';
   font-size:14px;
   width: 100%;
   box-sizing: border-box;
-  clear: left;
   padding-top: 20px;
   padding-right: 6px;
-  border-bottom-style: solid;
-  border-bottom-width: 1px;
-  border-bottom-color: #a2a2a2;
+  clear: left;
 }
 
 .game.stream {
   color: #000000;
-  font-family: 'PTSansNarrowBold';
   font-size:13px;
-  margin-top: 7px;
   text-decoration:none;
   display: inline-block;
   padding-top: 4px;
+  padding-bottom: 2px;
   padding-left: 10px;
-  border-bottom-style: dashed;
-  border-bottom-width: 1px;
-  border-bottom-color: #a2a2a2;
 }
 .game.stream:hover {
   background-color: #d1e0e0;
