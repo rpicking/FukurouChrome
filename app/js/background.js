@@ -1,13 +1,10 @@
 var content = new Content();
-var htmlContent = '';
 
 function start() {
     console.log("START");
+    console.log(content);
     var follows = "https://api.twitch.tv/kraken/users/VangardMk/follows/channels?limit=100"
     var games = "https://api.twitch.tv/kraken/games/top"
-
-    content.clear();
-    htmlContent = '';
 
     fetch(follows)
         .then(
@@ -38,7 +35,6 @@ function start() {
                                             var url = stream.channel.url;
                                             var game = stream.game;
                                             content.addStream(name, viewers, url, game);
-                                            htmlContent += content.createHTML();
                                         }
                                     });
                                 }
@@ -84,11 +80,12 @@ Content.prototype.addStream = function (name, views, link, game) {
         this.games[index].streams.push(new Stream(name, views, link));
     }
 
-    this.total += 1;
+    this.total = this.games.length;
 }
 
 Content.prototype.searchGame = function (game) {
     for (var i = 0; i < this.total; ++i) {
+        console.log(i);
         if (!this.games[i].game.localeCompare(game)) {
             return i;
         }
@@ -99,13 +96,14 @@ Content.prototype.searchGame = function (game) {
 
 // creates html for all games in this.games
 Content.prototype.createHTML = function () {
-    console.log(this.games);
     var html = '';
+
     if (this.total == 0) {  // no current games
         html = '<p id="vacant"> No streams online</p>';
     }
     else {
         for (var i = 0; i < this.total; ++i) {  //loop through games
+            console.log(i);
             console.log(this.games[i]);
             var game = this.games[i].game;
             html += '<div class="game">' + game + '<hr>';
@@ -169,10 +167,10 @@ function Stream(name, views, link) {
 // sort by views
 function compareViews(a, b) {
     if (a.views < b.views) {
-        return -1;
+        return 1;
     }
     if (a.views > b.views) {
-        return 1;
+        return -1;
     }
 
     return 0;
