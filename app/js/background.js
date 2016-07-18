@@ -1,8 +1,6 @@
 var content = new Content();
 
 function start() {
-    console.log("START");
-    console.log(content);
     var follows = "https://api.twitch.tv/kraken/users/VangardMk/follows/channels?limit=100"
     var games = "https://api.twitch.tv/kraken/games/top"
 
@@ -14,9 +12,11 @@ function start() {
                         response.status);
                     return;
                 }
+                // get followed streamers
                 response.json().then(function (streamer) {
                     for (var i = 0; i < streamer.follows.length; ++i) {
                         var name = streamer.follows[i].channel.name;
+                        var dispName = streamer.follows[i].channel.display_name;
                         var live = "https://api.twitch.tv/kraken/streams/" + name;
 
                         fetch(live)
@@ -27,14 +27,23 @@ function start() {
                                             response.status);
                                         return;
                                     }
-                                    response.json().then(function (data) {
+                                    // get online status and information
+                                    response.json().then(function (data, dispName) {
                                         stream = data.stream;
-                                        if (stream !== null) {     // channel is live
+                                        if (stream !== null) {     // stream is live
                                             var name = stream.channel.display_name;
                                             var viewers = stream.viewers;
                                             var url = stream.channel.url;
                                             var game = stream.game;
                                             content.addStream(name, viewers, url, game);
+                                        }
+                                        else {  // stream is offline
+                                            for (var j = 0; i < this.total; ++i) {
+                                                var index = this.games[i].checkDuplicate(dispName);
+                                                if (index != -1) {
+                                                    this.games[i].streams.splice(index, 1);
+                                                }
+                                            }
                                         }
                                     });
                                 }
@@ -53,8 +62,8 @@ function start() {
 
 
 // Class for stream data asked for by popup
-// Content.games
-//    Game.streams
+// Content.games[]
+//    Game.streams[]
 //       Stream
 function Content() {
     this.total = 0;
@@ -70,14 +79,16 @@ Content.prototype.addStream = function (name, views, link, game) {
     else {
         index = this.searchGame(game);
         if (index == -1) {   // game not already in list
-            console.log("SOMETHINGS FUCKY");
             index = this.games.length;
             this.games.push(new Game(game));
         }
     }
-
-    if (!this.games[index].checkDuplicate(name)) {  // if no duplicate
+    var dup = this.games[index].checkDuplicate(name);
+    if (dup == -1) {  // if not duplicate
         this.games[index].streams.push(new Stream(name, views, link));
+    }
+    else {  // update stream views
+        this.games[index].updateStream(dup, views);
     }
 
     this.total = this.games.length;
@@ -85,7 +96,6 @@ Content.prototype.addStream = function (name, views, link, game) {
 
 Content.prototype.searchGame = function (game) {
     for (var i = 0; i < this.total; ++i) {
-        console.log(i);
         if (!this.games[i].game.localeCompare(game)) {
             return i;
         }
@@ -103,8 +113,6 @@ Content.prototype.createHTML = function () {
     }
     else {
         for (var i = 0; i < this.total; ++i) {  //loop through games
-            console.log(i);
-            console.log(this.games[i]);
             var game = this.games[i].game;
             html += '<div class="game">' + game + '<hr>';
 
@@ -141,21 +149,20 @@ Game.prototype.createHTML = function () {
     return html;
 }
 
-// Returns true if match found
+// Returns position if match found else -1
 Game.prototype.checkDuplicate = function(name) {
     //check for duplicate
     for (var i = 0; i < this.streams.length; ++i) {
         if (!this.streams[i].name.localeCompare(name)) {
-            return true;
+            return i;
         }
     }
-    return false;
+    return -1;
 }
 
-Game.prototype.clear = function () {
-    this.streams.splice(0, this.streams.length);
+Game.prototype.updateStream = function (pos, views) {
+    this.streams[pos].views = views;
 }
-
 
 // class for stream
 function Stream(name, views, link) {
