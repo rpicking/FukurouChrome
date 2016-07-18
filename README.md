@@ -13,4 +13,5 @@ In no particular order.
 * Add other streaming platform support
  * Youtube 
  * Azubu
+* Tabs showing all streamers in favorited games
 * Ex right-click download best quality
