@@ -1,13 +1,14 @@
 # FukurouChromeExt
 Personal chrome extension with misc. features.
-### Currently working on: Twitch streams
+### Currently working on: Saved options
 
 ## Current Features
-* Live followed twitch streams (unordered)
+* Live followed twitch streams (ordered and catagorized)
 
 ## Planned Features
 In no particular order.
-* Twitch Streams order and catagorized
+* Refresh button
+* Improve look of popup page
 * Input and save username (for twitch following)
 * Add other streaming platform support
  * Youtube 
