@@ -17,40 +17,7 @@ function start() {
                     for (var i = 0; i < streamer.follows.length; ++i) {
                         var name = streamer.follows[i].channel.name;
                         var dispName = streamer.follows[i].channel.display_name;
-                        var live = "https://api.twitch.tv/kraken/streams/" + name;
-
-                        fetch(live)
-                            .then(
-                                function (response) {
-                                    if (response.status !== 200) {
-                                        console.log('Looks like there was a problem. Status Code: ' +
-                                            response.status);
-                                        return;
-                                    }
-                                    // get online status and information
-                                    response.json().then(function (data, dispName) {
-                                        stream = data.stream;
-                                        if (stream !== null) {     // stream is live
-                                            var name = stream.channel.display_name;
-                                            var viewers = stream.viewers;
-                                            var url = stream.channel.url;
-                                            var game = stream.game;
-                                            content.addStream(name, viewers, url, game);
-                                        }
-                                        else {  // stream is offline
-                                            for (var j = 0; i < this.total; ++i) {
-                                                var index = this.games[i].checkDuplicate(dispName);
-                                                if (index != -1) {
-                                                    this.games[i].streams.splice(index, 1);
-                                                }
-                                            }
-                                        }
-                                    });
-                                }
-                            )
-                            .catch(function (er) {
-                                console.log('Fetch Error :-S', er);
-                            });
+                        getStreamData(name, dispName);
                     }
                 });
             }
@@ -61,12 +28,50 @@ function start() {
 }
 
 
+function getStreamData(name, dispName) {
+    var live = "https://api.twitch.tv/kraken/streams/" + name;
+    fetch(live)
+        .then(
+            function (response) {
+                if (response.status !== 200) {
+                    console.log('Looks like there was a problem. Status Code: ' +
+                        response.status);
+                    return;
+                }
+                // get online status and information
+                response.json().then(function (data) {
+                    stream = data.stream;
+                    if (stream !== null) {     // stream is live
+                        var name = stream.channel.display_name;
+                        var viewers = stream.viewers;
+                        var url = stream.channel.url;
+                        var game = stream.game;
+                        content.addStream(name, viewers, url, game);
+                    }
+                    else {  // stream is offline
+                        for (var j = 0; j < content.total; ++j) {
+                            var index = content.games[j].checkDuplicate(dispName);
+                            if (index != -1) {
+                                content.removeStream(j, index);
+                            }
+                        }
+                    }
+                });
+            }
+        )
+        .catch(function (er) {
+            console.log('Fetch Error :-S', er);
+        });
+}
+
+
 // Class for stream data asked for by popup
 // Content.games[]
 //    Game.streams[]
 //       Stream
 function Content() {
     this.total = 0;
+    this.streamCount = 0;
     this.games = [];
 }
 
@@ -86,12 +91,33 @@ Content.prototype.addStream = function (name, views, link, game) {
     var dup = this.games[index].checkDuplicate(name);
     if (dup == -1) {  // if not duplicate
         this.games[index].streams.push(new Stream(name, views, link));
+        this.streamCount += 1;
+        this.updateBadge();
     }
     else {  // update stream views
         this.games[index].updateStream(dup, views);
     }
 
     this.total = this.games.length;
+}
+
+Content.prototype.removeStream = function (gIndex, sIndex) {
+    this.games[gIndex].streams.splice(sIndex, 1);
+    if (this.games[gIndex].length == 0) {
+        this.games.splice(gIndex, 1);
+    }
+
+    this.streamCount -= 1;
+    this.updateBadge();
+}
+
+Content.prototype.updateBadge = function () {
+    if(this.streamCount > 9) {
+        chrome.browserAction.setBadgeText({ text: "10+" });
+    }
+    else {
+        chrome.browserAction.setBadgeText({ text: String(this.streamCount) });
+    }
 }
 
 Content.prototype.searchGame = function (game) {
@@ -183,7 +209,7 @@ function compareViews(a, b) {
     return 0;
 }
 
-
-
+chrome.browserAction.setBadgeBackgroundColor({ color: [14, 45, 199, 255] });
+chrome.browserAction.setBadgeText({ text: "0" });
 start()
 setInterval(start, 30000)

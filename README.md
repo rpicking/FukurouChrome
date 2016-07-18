@@ -1,9 +1,10 @@
 # FukurouChromeExt
-Personal chrome extension with misc. features.
+Personal chrome extension.  Features include showing online followed twitch streams.
 ### Currently working on: Saved options
 
-## Current Features
+## Finished Features
 * Live followed twitch streams (ordered and catagorized)
+* Badge shows number of streams online
 
 ## Planned Features
 In no particular order.
