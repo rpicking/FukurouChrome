@@ -9,7 +9,6 @@ function start() {
     content.clean();
 
     var follows = "https://api.twitch.tv/kraken/users/" + username + "/follows/channels?limit=100"
-    var games = "https://api.twitch.tv/kraken/games/top"
 
     fetch(follows)
         .then(
@@ -21,11 +20,16 @@ function start() {
                 }
                 // get followed streamers
                 response.json().then(function (streamer) {
+                    var followed = [];
                     for (var i = 0; i < streamer.follows.length; ++i) {
                         var name = streamer.follows[i].channel.name;
                         var dispName = streamer.follows[i].channel.display_name;
+                        followed.push(dispName);
                         getStreamData(name, dispName);
                     }
+
+                    // check for non followed streams
+                    content.invalidCheck(followed);
                 });
             }
         )
@@ -116,6 +120,21 @@ Content.prototype.removeStream = function (gIndex, sIndex) {
 
     this.streamCount -= 1;
     this.updateBadge();
+}
+
+// checks all displayed streamers are still in followed
+Content.prototype.invalidCheck = function (followed) {
+    var remove = [];
+    for (var i = 0; i < this.games.length; ++i) {   //add invalid streams to remove
+        for (var j = 0; j < this.games[i].streams.length; ++j) {
+            if (followed.indexOf(this.games[i].streams[j].name) == -1) {
+                remove.push([i, j]);
+            }
+        }
+    }
+    for (var i = 0; i < remove.length; ++i) {   // delete all streams from content in remove
+        this.removeStream(remove[i][0], remove[i][1]);
+    }
 }
 
 Content.prototype.updateBadge = function () {
