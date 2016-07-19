@@ -39,10 +39,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Content Include="app\css\optionsStyle.css" />
     <Content Include="app\css\style.css" />
     <Content Include="app\img\icon.png" />
     <Content Include="app\js\background.js" />
     <Content Include="app\js\jquery.min.js" />
+    <Content Include="app\js\options.js" />
     <Content Include="app\js\popup.js" />
     <Content Include="app\options.html" />
     <Content Include="app\popup.html" />

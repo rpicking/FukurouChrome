@@ -1,8 +1,25 @@
-<!doctype html>
-
 <html>
-<head><title>Twitch Background</title></head>
+
+<head>
+    <title> Fukurou - Options</title>
+    <link rel="stylesheet" type="text/css" href="css/optionsStyle.css">
+</head>
+
 <body>
-    Twitch TV Account Name
+    <div id="header">Fukurou Extension Options</div>
+
+    <form id="settingsform">
+        <div class="settings">
+            Twitch.TV Username:
+            <input type="text" id="username">
+        </div>
+    </form>
+
+    <div id="footer">
+        <button id="saveButton">Save</button>
+        <span id="indicator">Options Saved</span>
+    </div>
+
+    <script src="js/options.js"></script>
 </body>
 </html>

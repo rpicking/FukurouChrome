@@ -1,7 +1,11 @@
 var content = new Content();
 
 function start() {
-    var follows = "https://api.twitch.tv/kraken/users/VangardMk/follows/channels?limit=100"
+    var username = localStorage.username;
+    if (!username) {
+        return;
+    }
+    var follows = "https://api.twitch.tv/kraken/users/" + username + "/follows/channels?limit=100"
     var games = "https://api.twitch.tv/kraken/games/top"
 
     fetch(follows)
@@ -157,6 +161,7 @@ Content.prototype.clear = function () {
     this.games.splice(0, this.games.length);
 }
 
+
 // class for game
 function Game(game) {
     this.game = game;
@@ -209,7 +214,12 @@ function compareViews(a, b) {
     return 0;
 }
 
-chrome.browserAction.setBadgeBackgroundColor({ color: [14, 45, 199, 255] });
-chrome.browserAction.setBadgeText({ text: "0" });
+
+function init() {
+    chrome.browserAction.setBadgeBackgroundColor({ color: [14, 45, 199, 255] });
+    chrome.browserAction.setBadgeText({ text: "0" });
+}
+
+init()
 start()
 setInterval(start, 30000)
