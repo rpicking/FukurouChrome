@@ -1,0 +1,31 @@
+body {
+  font-family: 'Verdana';
+}
+#header {
+  font-size: 28px;
+}
+.settings {
+  margin: 4px 4px 0 4px;
+  border: 1px solid #8c8c8c;
+  padding: 10px 10px 10px 10px;
+  display:inline-block;
+  font-weight: bold;
+}
+#username {
+  margin-left: 40px;
+}
+
+#footer {
+  margin: 10px 0 0 20px;
+}
+#saveButton {
+  font-size: 16px;
+  font-weight: bold;
+}
+#indicator {
+  font-size: 15px;
+  margin-left: 10px;
+  color: #0040ff;
+  opacity: 0;
+  transition:opacity 1s linear;
+}
