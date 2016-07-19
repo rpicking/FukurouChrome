@@ -5,6 +5,9 @@ function start() {
     if (!username) {
         return;
     }
+
+    content.clean();
+
     var follows = "https://api.twitch.tv/kraken/users/" + username + "/follows/channels?limit=100"
     var games = "https://api.twitch.tv/kraken/games/top"
 
@@ -124,13 +127,28 @@ Content.prototype.updateBadge = function () {
     }
 }
 
+Content.prototype.clean = function () {
+    var dead = [];
+    for (var i = 0; i < this.games.length; ++i) {
+        if (this.games[i].streams.length == 0) {
+            dead.push(i);
+        }
+    }
+    for (var j = 0; j < dead.length; ++j) {
+        this.removeGame(dead[j]);
+    }
+}
+
+Content.prototype.removeGame = function (index) {
+    this.games.splice(index, 1);
+}
+
 Content.prototype.searchGame = function (game) {
     for (var i = 0; i < this.total; ++i) {
         if (!this.games[i].game.localeCompare(game)) {
             return i;
         }
     }
-
     return -1;
 }
 
@@ -152,13 +170,6 @@ Content.prototype.createHTML = function () {
     }
 
     return html;
-}
-
-Content.prototype.clear = function () {
-    for (var i = 0; i < this.games.length; ++i) {
-        this.games[i].clear();
-    }
-    this.games.splice(0, this.games.length);
 }
 
 
