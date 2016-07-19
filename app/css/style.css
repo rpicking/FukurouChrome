@@ -3,6 +3,7 @@ body {
     padding: 0;
     margin: 0;
     background-color: #ffffff;
+    font-family: 'Verdana';
 }
 hr {
   margin: 0px;
@@ -12,10 +13,12 @@ hr.hr1 {
   border-top: 1px dashed #8c8c8c;
   margin-top: 2px;
 }
+hr.hr2 {
+  margin-right: 6px;
+}
 
-#extension {
+#streams {
   width: 400px;
-  border:1px solid black;
   overflow: auto;
   box-sizing:border-box;
   padding-left: 10px;
@@ -23,11 +26,10 @@ hr.hr1 {
   
 }
 .game {
-  font-family: 'Verdana';
   font-size:14px;
   width: 100%;
   box-sizing: border-box;
-  padding-top: 20px;
+  padding-top: 10px;
   padding-right: 6px;
   clear: left;
 }
@@ -48,7 +50,24 @@ hr.hr1 {
 #vacant {
   text-align: center;
 }
-
 .site {
   margin: 0 6px 0 2px;
+  height: 16px;
+}
+#header {
+  font-size: 28px;
+  margin: 4px 0 2px 4px;
+}
+#refresh {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+#refreshimg {
+  height: 16px;
+  width: 16px;
+}
+#extension {
+  position: relative;
+  width: 400px;
 }
