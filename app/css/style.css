@@ -71,3 +71,14 @@ hr.hr2 {
   position: relative;
   width: 400px;
 }
+
+.rotate {
+    transform:             rotate( -360deg );            
+        -moz-transform:    rotate( -360deg );                        
+        -o-transform:      rotate( -360deg );            
+        -webkit-transform: rotate( -360deg );            
+    transition:             transform 350ms ease;
+        -moz-transition:    -moz-transform 350ms ease;
+        -o-transition:      -o-transform 350ms ease;
+        -webkit-transition: -webkit-transform 350ms ease;
+}

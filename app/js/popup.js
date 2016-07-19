@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var refresh = document.getElementById("refresh");
     refresh.addEventListener('click', function () {
         chrome.extension.getBackgroundPage().start();
+        refresh.className = 'rotate';
         setTimeout(function () {
             location.reload();
         }, 1000);
