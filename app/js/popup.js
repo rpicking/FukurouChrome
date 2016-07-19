@@ -2,7 +2,6 @@
 //document.addEventListener('DOMContentLoaded', function () { });
 
 function init() {
-    console.log("im here");
     var htmlContent = '';
     var streamResults = document.getElementById("streams");
     htmlContent = chrome.extension.getBackgroundPage().content.createHTML();

@@ -99,6 +99,16 @@ Content.prototype.addStream = function (name, views, link, game) {
             this.games.push(new Game(game));
         }
     }
+    // check and remove stream from old game (streamer changed game)
+    for (var i = 0; i < this.games.length; ++i) {
+        if (i != index) {
+            var oldGame = this.games[i].checkDuplicate(name);
+            if (oldGame > -1) {
+                this.removeStream(i, oldGame);
+            }
+        }
+    }
+
     var dup = this.games[index].checkDuplicate(name);
     if (dup == -1) {  // if not duplicate
         this.games[index].streams.push(new Stream(name, views, link));
