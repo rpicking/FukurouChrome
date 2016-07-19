@@ -185,7 +185,7 @@ Game.prototype.createHTML = function () {
 
     this.streams.sort(compareViews);
     for (var i = 0; i < this.streams.length; ++i) {
-        html += '<a class="game stream" target="_blank" style="float:left" href="' + this.streams[i].link + '">' + this.streams[i].name + '<span style="float:right;">' + this.streams[i].views + '</span><hr class="hr1"></a>';
+        html += '<a class="game stream" target="_blank" style="float:left" href="' + this.streams[i].link + '">' + '<img class="site" src="img/twitch.png">' + this.streams[i].name + '<span style="float:right;">' + this.streams[i].views + '</span><hr class="hr1"></a>';
     }
 
     return html;
