@@ -5,14 +5,15 @@ Personal chrome extension.  Features include showing online followed twitch stre
 ## Finished Features
 * Live followed twitch streams (ordered and catagorized)
 * Badge shows number of streams online
+* Refresh button
+* Options page
+ * Save Twitch.tv Username
 
 ## Planned Features
 In no particular order.
-* Refresh button
-* Improve look of popup page
-* Input and save username (for twitch following)
+* Improve look of popup
 * Add other streaming platform support
  * Youtube 
  * Azubu
 * Tabs showing all streamers in favorited games
-* Ex right-click download best quality
+* Right-click download best quality
