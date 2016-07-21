@@ -61,7 +61,7 @@ function getStreamData(name, dispName) {
                         content.addStream(name, viewers, url, game);
                     }
                     else {  // stream is offline
-                        for (var j = 0; j < content.total; ++j) {
+                        for (var j = 0; j < content.games.length; ++j) {
                             var index = content.games[j].checkDuplicate(dispName);
                             if (index != -1) {
                                 content.removeStream(j, index);
