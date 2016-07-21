@@ -45,7 +45,8 @@ function getStreamData(name, dispName) {
         .then(
             function (response) {
                 if (response.status !== 200) {
-                    console.log('Looks like there was a problem. Status Code: ' +
+                    d = new Date();
+                    console.log('Looks like there was a problem. ' + d.toLocaleString() + ' Status Code: ' +
                         response.status);
                     return;
                 }
@@ -189,7 +190,7 @@ Content.prototype.createHTML = function () {
         html = '<p id="vacant"> No streams online</p>';
     }
     else {
-        for (var i = 0; i < this.total; ++i) {  //loop through games
+        for (var i = 0; i < this.games.length; ++i) {  //loop through games
             var game = this.games[i].game;
             html += '<div class="game">' + game + '<hr>';
 
@@ -262,4 +263,4 @@ function init() {
 
 init()
 start()
-setInterval(start, 30000)
+setInterval(start, 60000)

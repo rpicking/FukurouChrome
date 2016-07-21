@@ -41,7 +41,11 @@
   <ItemGroup>
     <Content Include="app\css\optionsStyle.css" />
     <Content Include="app\css\style.css" />
+    <Content Include="app\img\azubu.png" />
     <Content Include="app\img\icon.png" />
+    <Content Include="app\img\refresh.png" />
+    <Content Include="app\img\twitch.png" />
+    <Content Include="app\img\youtube.png" />
     <Content Include="app\js\background.js" />
     <Content Include="app\js\jquery.min.js" />
     <Content Include="app\js\options.js" />
