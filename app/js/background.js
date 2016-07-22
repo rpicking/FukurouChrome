@@ -95,11 +95,14 @@ Content.prototype.addStream = function (name, views, link, game) {
     }
     else {
         index = this.searchGame(game);
-        if (index == -1) {   // game not already in list
+        if (index == -1) {   // game not already in list - Add new game
             index = this.games.length;
             this.games.push(new Game(game));
+            this.games.sort(compareGame);
+            index = this.searchGame(game);
         }
     }
+
     // check and remove stream from old game (streamer changed game)
     for (var i = 0; i < this.games.length; ++i) {
         if (i != index) {
@@ -169,10 +172,13 @@ Content.prototype.clean = function () {
     }
 }
 
+// removes game
 Content.prototype.removeGame = function (index) {
     this.games.splice(index, 1);
+    //this.games.sort(compareGame);
 }
 
+// returns position of game if found else return -1
 Content.prototype.searchGame = function (game) {
     for (var i = 0; i < this.total; ++i) {
         if (!this.games[i].game.localeCompare(game)) {
@@ -251,10 +257,19 @@ function compareViews(a, b) {
     if (a.views > b.views) {
         return -1;
     }
-
     return 0;
 }
 
+// sort alphabetically by game name
+function compareGame(a, b) {
+    if (a.game < b.game) {
+        return -1;
+    }
+    if (a.game > b.game) {
+        return 1;
+    }
+    return 0;
+}
 
 function init() {
     chrome.browserAction.setBadgeBackgroundColor({ color: [14, 45, 199, 255] });
