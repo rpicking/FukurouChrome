@@ -180,7 +180,7 @@ Content.prototype.removeGame = function (index) {
 
 // returns position of game if found else return -1
 Content.prototype.searchGame = function (game) {
-    for (var i = 0; i < this.total; ++i) {
+    for (var i = 0; i < this.games.length; ++i) {
         if (!this.games[i].game.localeCompare(game)) {
             return i;
         }
