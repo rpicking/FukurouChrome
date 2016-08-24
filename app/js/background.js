@@ -4,8 +4,10 @@ function saveFavorite() {
     chrome.tabs.query({ active: true, currentWindow: true}, function (tabs) {
         var url = tabs[0].url;
         if((url.indexOf("exhentai") >= 0) || (url.indexOf("g.e-hentai") >= 0)){
-            chrome.tabs.sendMessage(tabs[0].id, { type: "parse" }, function (response) {
+            chrome.tabs.sendMessage(tabs[0].id, { type: "parseEx" }, function (response) {
                 console.log(response);
+                chrome.downloads.download({ url: response, saveAs: true }, function (id) {
+                });
             });
         }
     });
