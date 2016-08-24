@@ -25,7 +25,7 @@
 function parseEx() {
     var url = document.getElementById("i7").getElementsByTagName("a");
     if (url.length == 0) {
-        return document.getElementById("img").src;
+        return "";
     }
     return url[0].href;
 }

@@ -1,14 +1,25 @@
-chrome.contextMenus.create({ title: "Add to Favorites", id: 'Fukurou', contexts: ["image", "video", "audio"], onclick: saveFavorite })
+chrome.contextMenus.create({
+    title: "Add to Favorites",
+    id: 'Fukurou',
+    contexts: ["image", "video", "audio"],
+    onclick: function (info) {
+        saveFavorite(info.srcUrl)
+    }
+});
 
-function saveFavorite() {
+function saveFavorite(downloadUrl) {
     chrome.tabs.query({ active: true, currentWindow: true}, function (tabs) {
-        var url = tabs[0].url;
-        if((url.indexOf("exhentai") >= 0) || (url.indexOf("g.e-hentai") >= 0)){
+        var cur = tabs[0].url;
+        if((cur.indexOf("exhentai") >= 0) || (cur.indexOf("g.e-hentai") >= 0)){
             chrome.tabs.sendMessage(tabs[0].id, { type: "parseEx" }, function (response) {
-                console.log(response);
-                chrome.downloads.download({ url: response, saveAs: true }, function (id) {
-                });
+                if (response.length == 0) {
+                    chrome.downloads.download({ url: downloadUrl, saveAs: true });
+                }
+                chrome.downloads.download({ url: response, saveAs: true });
             });
+        }
+        else {
+            chrome.downloads.download({ url: downloadUrl, saveAs: true });
         }
     });
 }
@@ -22,7 +33,6 @@ function start() {
     }
 
     content.clean();
-
     var follows = "https://api.twitch.tv/kraken/users/" + username + "/follows/channels?limit=100"
 
     fetch(follows)
