@@ -47,6 +47,7 @@
     <Content Include="app\img\twitch.png" />
     <Content Include="app\img\youtube.png" />
     <Content Include="app\js\background.js" />
+    <Content Include="app\js\content_favorite.js" />
     <Content Include="app\js\jquery.min.js" />
     <Content Include="app\js\options.js" />
     <Content Include="app\js\popup.js" />
