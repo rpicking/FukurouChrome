@@ -25,6 +25,7 @@ function saveFavorite(downloadUrl) {
 }
 
 var content = new Content();
+var headers = { method: 'GET', headers: { 'Client-ID': 'b71k7vce5w1szw9joc08sdo4r19wqb1' } }
 
 function start() {
     var username = localStorage.username;
@@ -35,7 +36,7 @@ function start() {
     content.clean();
     var follows = "https://api.twitch.tv/kraken/users/" + username + "/follows/channels?limit=100"
 
-    fetch(follows)
+    fetch(follows, headers)
         .then(
             function (response) {
                 if (response.status !== 200) {
@@ -66,7 +67,7 @@ function start() {
 
 function getStreamData(name, dispName) {
     var live = "https://api.twitch.tv/kraken/streams/" + name;
-    fetch(live)
+    fetch(live, headers)
         .then(
             function (response) {
                 if (response.status !== 200) {
@@ -216,8 +217,7 @@ Content.prototype.searchGame = function (game) {
 // creates html for all games in this.games
 Content.prototype.createHTML = function () {
     var html = '';
-
-    if (this.total == 0) {  // no current games
+    if (this.streamCount == 0) {  // no current games
         html = '<p id="vacant"> No streams online</p>';
     }
     else {
