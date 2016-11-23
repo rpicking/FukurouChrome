@@ -11,10 +11,13 @@
   "options_page": "options.html",
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["js/content_favorite.js"]
+      "matches": [ "<all_urls>" ],
+      "js": [ "js/content_favorite.js" ]
     }
   ],
+  "icons": {
+    "512":  "img/icon-512.png"
+  },
   "permissions": [
     "contextMenus",
     "tabs",
