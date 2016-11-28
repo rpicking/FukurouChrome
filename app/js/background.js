@@ -3,25 +3,81 @@ chrome.contextMenus.create({
     id: 'Fukurou',
     contexts: ["image", "video", "audio"],
     onclick: function (info) {
-        saveFavorite(info.srcUrl)
+        //saveFavorite(info.srcUrl);
+        processDownload(info.srcUrl, info.pageUrl);
     }
 });
 
-function saveFavorite(downloadUrl) {
-    chrome.tabs.query({ active: true, currentWindow: true}, function (tabs) {
-        var cur = tabs[0].url;
-        if((cur.indexOf("exhentai") >= 0) || (cur.indexOf("g.e-hentai") >= 0)){
-            chrome.tabs.sendMessage(tabs[0].id, { type: "parseEx" }, function (response) {
-                if (response.length == 0) {
-                    chrome.downloads.download({ url: downloadUrl, saveAs: true });
+chrome.runtime.onMessage.addListener(
+    function (request, sender, sendResponse) {
+        sendDownload(request.srcUrl, request.pageUrl, request.comicLink, request.comicName, request.comicPage);
+    });
+
+function processDownload(srcUrl, pageUrl) {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        //if on an ehentai site download largest size
+        if (pageUrl.indexOf("exhentai") > -1) {
+            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseEx", "srcUrl": srcUrl, "pageUrl": pageUrl}, function (response) {
+                if (response.status === "Received") {
+                    queue.push(srcUrl);
                 }
-                chrome.downloads.download({ url: response, saveAs: true });
+            });
+        }
+        else if (pageUrl.indexOf("g.e-hentai") > -1) {
+            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseG.e", "srcUrl": srcUrl, "pageUrl": pageUrl }, function (response) {
+                if (response.status === "Received") {
+                    queue.push(srcUrl);
+                }
             });
         }
         else {
-            chrome.downloads.download({ url: downloadUrl, saveAs: true });
+            sendDownload(srcUrl, pageUrl, "", "", "");
         }
     });
+}
+
+// srcUrl: url to item that is being downloaded
+// pageUrl: url of the page that item downloaded from
+// comicLink: *CUSTOM* url of comic that item is from
+// comicName: *CUSTOM* name of comic
+// comicPage: *CUSTOM* page number of item
+// cookies: cookies from pageUrl domain
+function sendDownload(srcUrl, pageUrl, comicLink, comicName, comicPage) {
+    var domain = extractDomain(pageUrl);
+    var cookies = [];
+    chrome.cookies.getAll({ 'url': domain }, function (sitecookies) {
+        cookieslength = sitecookies.length;
+        for (var i = 0; i < cookieslength; ++i) {
+            cookies.push([sitecookies[i].name, sitecookies[i].value]);
+        }
+        chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg',
+        {
+            "srcUrl": srcUrl,
+            "pageUrl": pageUrl,
+            "comicLink": comicLink,
+            "comicName": comicName,
+            "comicPage": comicPage,
+            "cookies": cookies
+        }
+        ,
+        function (response) {
+
+        });
+    });
+}
+
+// returns domain name from url
+function extractDomain(url) {
+    var preIndex = url.indexOf("://") + 3;
+    var searchIndex = url.substring(preIndex).indexOf('/');
+    if (searchIndex > -1) {
+        url = url.slice(0, preIndex + searchIndex);
+    }
+    searchIndex = url.substring(preIndex).indexOf(':');
+    if (searchIndex > -1) {
+        url = url.slice(0, preIndex + searchIndex);
+    }
+    return url;
 }
 
 var content = new Content();
@@ -302,5 +358,6 @@ function init() {
 }
 
 init()
+queue = [];
 start()
 setInterval(start, 60000)

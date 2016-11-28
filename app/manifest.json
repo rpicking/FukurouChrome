@@ -16,12 +16,16 @@
     }
   ],
   "icons": {
-    "512":  "img/icon-512.png"
+    "16":  "img/icon-16.png",
+    "512": "img/icon-512.png"
   },
   "permissions": [
     "contextMenus",
     "tabs",
     "downloads",
+    "nativeMessaging",
+    "cookies",
+    "<all_urls>",
     "https://api.twitch.tv/*"
   ],
   "browser_action": {
