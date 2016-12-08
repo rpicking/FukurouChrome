@@ -1,34 +1,16 @@
-//var xhr = new XMLHttpRequest();
-//var url = "http://g.e-hentai.org/api.php"
-//var params = {
-//    "method": "gdata",
-//    "gidlist": [
-//        [782318, "2fb82c1c34"]
-//    ],
-//    "namespace": 1
-//}
-//xhr.open("POST", url, true);
-//xhr.onreadystatechange = function () {
-//    if (xhr.readyState == 4 && xhr.status == 200) {
-//        console.log(xhr.responseText)
-//    }
-//}
-//xhr.send(JSON.stringify(params))
-
-
 //document.addEventListener("mousedown", function (event) {
 //    if (event.button == 2) {
 //        chrome.extension.sendRequest({ cmd: "create_menu" });
 //    }
 //}, true);
 
-// return [srcUrl, newUrl, comicLink, comicName, comicPage]
-function parseEx(srcUrl, pageUrl, apiUrl) {
+
+function parseEx(srcUrl, pageUrl, domain, apiUrl) {
     var results = [];
-    var newUrl = srcUrl;
     var comicLink = "";
     var comicName = "";
     var comicPage = "";
+    var artist = "";
 
     var elem = document.getElementsByClassName("gm");
     if (elem.length != 0) {   // currently on gallery page
@@ -63,11 +45,18 @@ function parseEx(srcUrl, pageUrl, apiUrl) {
     var gdata = { "method": "gdata", "gidlist": [id], "namespace": 1 };
     send_req(apiUrl, gdata).then(function (response) {
         comicName = response.gmetadata[0].title;
-        send_message(srcUrl, pageUrl, comicLink, comicName, comicPage);
+        len = response.gmetadata[0].tags.length;
+        for (var i = 0; i < len; ++i) {
+            if (response.gmetadata[0].tags[i].startsWith("artist:")) {  // tag is artist
+                artist = response.gmetadata[0].tags[i]  
+                artist = artist.substring(artist.indexOf(":") + 1); // remove artist: from tag
+            }
+        }
+        send_message(srcUrl, pageUrl, domain, comicLink, comicName, comicPage, artist);
     });
 }
 
-// Makes request
+// Makes request to apiUrl with package data
 function send_req(apiUrl, data) {
     return new Promise(function (resolve, reject) {
         var xhr = new XMLHttpRequest();
@@ -82,14 +71,15 @@ function send_req(apiUrl, data) {
 }
 
 // Sends required info back to background for passing to download app
-function send_message(srcUrl, pageUrl, comicLink, comicName, comicPage) {
-    chrome.runtime.sendMessage(
-        {
+function send_message(srcUrl, pageUrl, domain, comicLink, comicName, comicPage, artist) {
+    chrome.runtime.sendMessage({
             "srcUrl": srcUrl,
             "pageUrl": pageUrl,
+            "domain": domain,
             "comicLink": comicLink,
             "comicName": comicName,
-            "comicPage": comicPage
+            "comicPage": comicPage,
+            "artist": artist,
         }, function (response) {
 
     });
@@ -100,10 +90,10 @@ chrome.runtime.onMessage.addListener(
         sendResponse({ "status": "Received" });
         switch(request.type) {
             case "parseEx":
-                parseEx(request.srcUrl, request.pageUrl, "https://exhentai.org/api.php");
+                parseEx(request.srcUrl, request.pageUrl, request.domain, "https://exhentai.org/api.php");
                 break;
             case "parseG.e":
-                parseEx(request.srcUrl, request.pageUrl, "http://g.ehentai.org/api.php");
+                parseEx(request.srcUrl, request.pageUrl, request.domain, "http://g.ehentai.org/api.php");
                 break;
             default:
                 console.error("unrecognised message: ", request);

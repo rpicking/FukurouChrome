@@ -3,65 +3,70 @@ chrome.contextMenus.create({
     id: 'Fukurou',
     contexts: ["image", "video", "audio"],
     onclick: function (info) {
-        //saveFavorite(info.srcUrl);
         processDownload(info.srcUrl, info.pageUrl);
     }
 });
 
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
-        sendDownload(request.srcUrl, request.pageUrl, request.comicLink, request.comicName, request.comicPage);
+        sendDownload(request.srcUrl, request.pageUrl, request.domain, request.comicLink, request.comicName, request.comicPage, request.artist);
     });
 
 function processDownload(srcUrl, pageUrl) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        var domain = extractDomain(pageUrl);
         //if on an ehentai site download largest size
-        if (pageUrl.indexOf("exhentai") > -1) {
-            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseEx", "srcUrl": srcUrl, "pageUrl": pageUrl}, function (response) {
-                if (response.status === "Received") {
-                    queue.push(srcUrl);
-                }
+        if (domain.indexOf("exhentai.org") > -1) {
+            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseEx", "srcUrl": srcUrl, "pageUrl": pageUrl, "domain": domain }, function (response) {
+                // reponse processing goes here
             });
         }
-        else if (pageUrl.indexOf("g.e-hentai") > -1) {
-            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseG.e", "srcUrl": srcUrl, "pageUrl": pageUrl }, function (response) {
-                if (response.status === "Received") {
-                    queue.push(srcUrl);
-                }
+        else if (domain.indexOf("g.e-hentai.org") > -1) {
+            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseG.e", "srcUrl": srcUrl, "pageUrl": pageUrl, "domain": domain }, function (response) {
+                // reponse processing goes here
             });
         }
-        else {
-            sendDownload(srcUrl, pageUrl, "", "", "");
+        else {  // if no custom processing for domain, send download to host
+            sendDownload(srcUrl, pageUrl, domain);
         }
     });
 }
 
-// srcUrl: url to item that is being downloaded
-// pageUrl: url of the page that item downloaded from
-// comicLink: *CUSTOM* url of comic that item is from
-// comicName: *CUSTOM* name of comic
-// comicPage: *CUSTOM* page number of item
-// cookies: cookies from pageUrl domain
-function sendDownload(srcUrl, pageUrl, comicLink, comicName, comicPage) {
-    var domain = extractDomain(pageUrl);
+/*  Sends download url and optional parameters to fukurou host
+srcUrl: url to item that is being downloaded
+pageUrl: url of the page that item downloaded from
+domain: domain of pageUrl
+comicLink: *OPTIONAL* url of comic that item is from
+comicName: *OPTIONAL* name of comic
+comicPage: *OPTIONAL* page number of item
+artist: *OPTIONAL* artist/artists parent manga
+cookies: cookies from pageUrl domain
+*/
+function sendDownload(srcUrl, pageUrl, domain, comicLink, comicName, comicPage, artist) {
+    comicLink = comicLink || '';  // set default parameters PRE ES2015?
+    comicName = comicName || '';
+    comicPage = comicPage || '';
+    artist = artist || '';
+
     var cookies = [];
+    console.log(domain);
     chrome.cookies.getAll({ 'url': domain }, function (sitecookies) {
-        cookieslength = sitecookies.length;
+        console.log(sitecookies);
+        var cookieslength = sitecookies.length;
         for (var i = 0; i < cookieslength; ++i) {
             cookies.push([sitecookies[i].name, sitecookies[i].value]);
         }
-        chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg',
-        {
+        chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', {
             "srcUrl": srcUrl,
             "pageUrl": pageUrl,
             "comicLink": comicLink,
             "comicName": comicName,
             "comicPage": comicPage,
+            "artist": artist,
             "cookies": cookies
-        }
-        ,
-        function (response) {
-
+        }, function (response) {
+            // response processing goes here
+            // success? failure?
         });
     });
 }
