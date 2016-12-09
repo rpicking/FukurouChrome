@@ -49,9 +49,7 @@ function sendDownload(srcUrl, pageUrl, domain, comicLink, comicName, comicPage, 
     artist = artist || '';
 
     var cookies = [];
-    console.log(domain);
     chrome.cookies.getAll({ 'url': domain }, function (sitecookies) {
-        console.log(sitecookies);
         var cookieslength = sitecookies.length;
         for (var i = 0; i < cookieslength; ++i) {
             cookies.push([sitecookies[i].name, sitecookies[i].value]);
