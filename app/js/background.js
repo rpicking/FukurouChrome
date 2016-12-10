@@ -1,9 +1,26 @@
 chrome.contextMenus.create({
     title: "Add to Favorites",
-    id: 'Fukurou',
     contexts: ["image", "video", "audio"],
     onclick: function (info) {
         processDownload(info.srcUrl, info.pageUrl);
+    }
+});
+chrome.contextMenus.create({
+    title: 'Request Sync',
+    contexts: ['all'],
+    onclick: function (info) {
+        chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', {
+            "task": 'sync',
+        }, function (response) {
+            console.log(response);
+            for (var item in response.folders) {
+                console.log(item);
+                console.log(response.folders[item].path);
+            }
+            //var len = response.folders
+            // response processing goes here
+            // success? failure?
+        });
     }
 });
 
@@ -55,6 +72,8 @@ function sendDownload(srcUrl, pageUrl, domain, comicLink, comicName, comicPage, 
             cookies.push([sitecookies[i].name, sitecookies[i].value]);
         }
         chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', {
+            "task": "save",
+            "folder": "New folder", // name of saved folder in config
             "srcUrl": srcUrl,
             "pageUrl": pageUrl,
             "comicLink": comicLink,
