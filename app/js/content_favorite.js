@@ -5,7 +5,7 @@
 //}, true);
 
 
-function parseEx(srcUrl, pageUrl, domain, apiUrl) {
+function parseEx(srcUrl, pageUrl, domain, folder, apiUrl) {
     var results = [];
     var comicLink = "";
     var comicName = "";
@@ -52,7 +52,7 @@ function parseEx(srcUrl, pageUrl, domain, apiUrl) {
                 artist = artist.substring(artist.indexOf(":") + 1); // remove artist: from tag
             }
         }
-        send_message(srcUrl, pageUrl, domain, comicLink, comicName, comicPage, artist);
+        send_message(srcUrl, pageUrl, domain, folder, comicLink, comicName, comicPage, artist);
     });
 }
 
@@ -90,10 +90,10 @@ chrome.runtime.onMessage.addListener(
         sendResponse({ "status": "Received" });
         switch(request.type) {
             case "parseEx":
-                parseEx(request.srcUrl, request.pageUrl, request.domain, "https://exhentai.org/api.php");
+                parseEx(request.srcUrl, request.pageUrl, request.domain, request.folder, "https://exhentai.org/api.php");
                 break;
             case "parseG.e":
-                parseEx(request.srcUrl, request.pageUrl, request.domain, "http://g.ehentai.org/api.php");
+                parseEx(request.srcUrl, request.pageUrl, request.domain, request.folder, "http://g.ehentai.org/api.php");
                 break;
             default:
                 console.error("unrecognised message: ", request);

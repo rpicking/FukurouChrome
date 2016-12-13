@@ -1,11 +1,4 @@
 chrome.contextMenus.create({
-    title: "Add to Favorites",
-    contexts: ["image", "video", "audio"],
-    onclick: function (info) {
-        processDownload(info.srcUrl, info.pageUrl);
-    }
-});
-chrome.contextMenus.create({
     title: 'Request Sync',
     contexts: ['all'],
     onclick: function (info) {
@@ -23,28 +16,34 @@ chrome.contextMenus.create({
         });
     }
 });
+chrome.contextMenus.create({ type: 'separator' });
 
+// listen for messages from content_favorite content script
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
-        sendDownload(request.srcUrl, request.pageUrl, request.domain, request.comicLink, request.comicName, request.comicPage, request.artist);
+        sendDownload(request.srcUrl, request.pageUrl, request.domain, request.folder, request.comicLink, request.comicName, request.comicPage, request.artist);
     });
 
-function processDownload(srcUrl, pageUrl) {
+
+// srcUrl: url to download item
+// pageUrl: url to download item was gotten from
+// folder: folder name that item will be downloaded to (setup in host)
+function processDownload(srcUrl, pageUrl, folder) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         var domain = extractDomain(pageUrl);
         //if on an ehentai site download largest size
         if (domain.indexOf("exhentai.org") > -1) {
-            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseEx", "srcUrl": srcUrl, "pageUrl": pageUrl, "domain": domain }, function (response) {
+            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseEx", "srcUrl": srcUrl, "pageUrl": pageUrl, "domain": domain, "folder": folder }, function (response) {
                 // reponse processing goes here
             });
         }
         else if (domain.indexOf("g.e-hentai.org") > -1) {
-            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseG.e", "srcUrl": srcUrl, "pageUrl": pageUrl, "domain": domain }, function (response) {
+            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseG.e", "srcUrl": srcUrl, "pageUrl": pageUrl, "domain": domain, "folder": folder }, function (response) {
                 // reponse processing goes here
             });
         }
         else {  // if no custom processing for domain, send download to host
-            sendDownload(srcUrl, pageUrl, domain);
+            sendDownload(srcUrl, pageUrl, domain, folder);
         }
     });
 }
@@ -53,13 +52,14 @@ function processDownload(srcUrl, pageUrl) {
 srcUrl: url to item that is being downloaded
 pageUrl: url of the page that item downloaded from
 domain: domain of pageUrl
+folder: name in folder file will be downloaded to
 comicLink: *OPTIONAL* url of comic that item is from
 comicName: *OPTIONAL* name of comic
 comicPage: *OPTIONAL* page number of item
 artist: *OPTIONAL* artist/artists parent manga
 cookies: cookies from pageUrl domain
 */
-function sendDownload(srcUrl, pageUrl, domain, comicLink, comicName, comicPage, artist) {
+function sendDownload(srcUrl, pageUrl, domain, folder, comicLink, comicName, comicPage, artist) {
     comicLink = comicLink || '';  // set default parameters PRE ES2015?
     comicName = comicName || '';
     comicPage = comicPage || '';
@@ -73,7 +73,7 @@ function sendDownload(srcUrl, pageUrl, domain, comicLink, comicName, comicPage, 
         }
         chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', {
             "task": "save",
-            "folder": "New folder", // name of saved folder in config
+            "folder": folder, // name of saved folder in config
             "srcUrl": srcUrl,
             "pageUrl": pageUrl,
             "comicLink": comicLink,
@@ -102,9 +102,38 @@ function extractDomain(url) {
     return url;
 }
 
-var content = new Content();
-var headers = { method: 'GET', headers: { 'Client-ID': 'b71k7vce5w1szw9joc08sdo4r19wqb1' } }
+// send message requesting folders from host, and create context menus for each
+function syncHost() {
+    chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', {
+        "task": 'sync',
+    }, function (response) {
+        localStorage.folders = response.folders;
+        //clean "old" menus
+        var menuLength = activeMenus.length;
+        for (var i = 0; i < menuLength; ++i) {
+            chrome.contextMenus.remove(activeMenus[i]);
+        }
+        activeMenus = [];
+        for (var item in response.folders) {
+            //console.log(item);
+            //console.log(response.folders[item].path);
+            createMenu(item);
+        }
+    });
+}
 
+function createMenu(folder) {
+    var id = chrome.contextMenus.create({
+        title: "Add to: " + folder,
+        contexts: ["image", "video", "audio"],
+        onclick: function (info) {
+            processDownload(info.srcUrl, info.pageUrl, folder);
+        }
+    });
+    activeMenus.push(id);
+}
+
+// start twitch portion of extension
 function start() {
     var username = localStorage.username;
     if (!username) {
@@ -112,7 +141,7 @@ function start() {
     }
 
     content.clean();
-    var follows = "https://api.twitch.tv/kraken/users/" + username + "/follows/channels?limit=100"
+    var follows = "https://api.twitch.tv/kraken/users/" + username + "/follows/channels?limit=100";
 
     fetch(follows, headers)
         .then(
@@ -377,9 +406,14 @@ function compareGame(a, b) {
 function init() {
     chrome.browserAction.setBadgeBackgroundColor({ color: [14, 45, 199, 255] });
     chrome.browserAction.setBadgeText({ text: "0" });
+    syncHost()
 }
 
-init()
-queue = [];
-start()
-setInterval(start, 60000)
+
+// Start Extension
+var content = new Content();
+var activeMenus = [];
+var headers = { method: 'GET', headers: { 'Client-ID': 'b71k7vce5w1szw9joc08sdo4r19wqb1' } }
+init();
+start();
+setInterval(start, 60000);
