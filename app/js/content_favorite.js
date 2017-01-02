@@ -71,11 +71,12 @@ function send_req(apiUrl, data) {
 }
 
 // Sends required info back to background for passing to download app
-function send_message(srcUrl, pageUrl, domain, comicLink, comicName, comicPage, artist) {
+function send_message(srcUrl, pageUrl, domain, folder, comicLink, comicName, comicPage, artist) {
     chrome.runtime.sendMessage({
             "srcUrl": srcUrl,
             "pageUrl": pageUrl,
             "domain": domain,
+            "folder": folder,
             "comicLink": comicLink,
             "comicName": comicName,
             "comicPage": comicPage,
