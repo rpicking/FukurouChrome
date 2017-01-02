@@ -114,6 +114,7 @@ function syncHost() {
             chrome.contextMenus.remove(activeMenus[i]);
         }
         activeMenus = [];
+        // Order created is order appears in context menu
         for (var item in response.folders) {
             //console.log(item);
             //console.log(response.folders[item].path);
