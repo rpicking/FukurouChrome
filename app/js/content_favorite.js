@@ -5,7 +5,7 @@
 //}, true);
 
 
-function parseEx(srcUrl, pageUrl, domain, folder, apiUrl) {
+function parseEhentai(srcUrl, pageUrl, folder, apiUrl) {
     var results = [];
     var comicLink = "";
     var comicName = "";
@@ -52,9 +52,23 @@ function parseEx(srcUrl, pageUrl, domain, folder, apiUrl) {
                 artist = artist.substring(artist.indexOf(":") + 1); // remove artist: from tag
             }
         }
-        send_message(srcUrl, pageUrl, domain, folder, comicLink, comicName, comicPage, artist);
+        send_message(srcUrl, pageUrl, folder, comicLink, comicName, comicPage, artist);
     });
 }
+
+
+function parseTumblr(info, folder) {
+    if (info.hasOwnProperty("frameUrl")) {
+        $.get(info.frameUrl).then(html => {
+            var srcUrl = $(html).find('source').attr('src');
+            send_message(srcUrl, info.pageUrl, folder);
+        });
+    }
+    else {
+        send_message(info.srcUrl, info.pageUrl, folder);
+    }
+}
+
 
 // Makes request to apiUrl with package data
 function send_req(apiUrl, data) {
@@ -71,7 +85,8 @@ function send_req(apiUrl, data) {
 }
 
 // Sends required info back to background for passing to download app
-function send_message(srcUrl, pageUrl, domain, folder, comicLink, comicName, comicPage, artist) {
+function send_message(srcUrl, pageUrl, folder, comicLink, comicName, comicPage, artist) {
+    var domain = extractDomain(pageUrl);
     chrome.runtime.sendMessage({
             "srcUrl": srcUrl,
             "pageUrl": pageUrl,
@@ -86,17 +101,54 @@ function send_message(srcUrl, pageUrl, domain, folder, comicLink, comicName, com
     });
 }
 
+// returns domain name from url
+function extractDomain(url) {
+    var preIndex = url.indexOf("://") + 3;
+    var searchIndex = url.substring(preIndex).indexOf('/');
+    if (searchIndex > -1) {
+        url = url.slice(0, preIndex + searchIndex);
+    }
+    searchIndex = url.substring(preIndex).indexOf(':');
+    if (searchIndex > -1) {
+        url = url.slice(0, preIndex + searchIndex);
+    }
+    return url;
+}
+
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
         sendResponse({ "status": "Received" });
+
+        if (request.info.pageUrl.indexOf("exhentai.org") > -1) {
+            parseEhentai(request.info.srcUrl, request.info.pageUrl, request.folder, "https://exhentai.org/api.php");
+        }
+        else if (request.info.pageUrl.indexOf("g.e-hentai.org") > -1) {
+            parseEhentai(request.srcUrl, request.pageUrl, request.folder, "http://g.ehentai.org/api.php");
+        }
+        else if (request.info.pageUrl.indexOf("tumblr.com") > -1) {
+            parseTumblr(request.info, request.folder);
+        }
+        else {  // no custom processing
+            send_message(request.info.srcUrl, request.info.pageUrl, domain, request.folder);
+        }
+
+        /*
+        var mediaType = request.info.mediaType;
+        if (mediaType != undefined) {   // image,video,audio (gif = video)
+
+        }
+        else {
+
+        }
+
         switch(request.type) {
             case "parseEx":
-                parseEx(request.srcUrl, request.pageUrl, request.domain, request.folder, "https://exhentai.org/api.php");
+                parseEhentai(request.srcUrl, request.pageUrl, request.domain, request.folder, "https://exhentai.org/api.php");
                 break;
             case "parseG.e":
-                parseEx(request.srcUrl, request.pageUrl, request.domain, request.folder, "http://g.ehentai.org/api.php");
+                parseEhentai(request.srcUrl, request.pageUrl, request.domain, request.folder, "http://g.ehentai.org/api.php");
                 break;
             default:
                 console.error("unrecognised message: ", request);
-        }
+        }*/
     });

@@ -28,24 +28,28 @@ chrome.runtime.onMessage.addListener(
 // srcUrl: url to download item
 // pageUrl: url to download item was gotten from
 // folder: folder name that item will be downloaded to (setup in host)
-function processDownload(srcUrl, pageUrl, folder) {
+function processDownload(info, folder) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        var domain = extractDomain(pageUrl);
-        //if on an ehentai site download largest size
-        if (domain.indexOf("exhentai.org") > -1) {
-            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseEx", "srcUrl": srcUrl, "pageUrl": pageUrl, "domain": domain, "folder": folder }, function (response) {
-                // reponse processing goes here
-            });
-        }
-        else if (domain.indexOf("g.e-hentai.org") > -1) {
-            chrome.tabs.sendMessage(tabs[0].id, { "type": "parseG.e", "srcUrl": srcUrl, "pageUrl": pageUrl, "domain": domain, "folder": folder }, function (response) {
-                // reponse processing goes here
-            });
-        }
-        else {  // if no custom processing for domain, send download to host
-            sendDownload(srcUrl, pageUrl, domain, folder);
+        chrome.tabs.sendMessage(tabs[0].id, { "info": info, "folder": folder }, function (response) {
+            // reponse processing goes here
+        });
+    });
+}
+
+// creates menu item
+function createMenu(folder) {
+    var id = chrome.contextMenus.create({
+        title: "Add to: " + folder,
+        contexts: ["all"],
+        onclick: function (info) {
+            console.log(info);
+            if (info.mediaType == undefined) {
+                console.log('not media');
+            }
+            processDownload(info, folder);
         }
     });
+    activeMenus.push(id);
 }
 
 /*  Sends download url and optional parameters to fukurou host
@@ -123,16 +127,6 @@ function syncHost() {
     });
 }
 
-function createMenu(folder) {
-    var id = chrome.contextMenus.create({
-        title: "Add to: " + folder,
-        contexts: ["image", "video", "audio"],
-        onclick: function (info) {
-            processDownload(info.srcUrl, info.pageUrl, folder);
-        }
-    });
-    activeMenus.push(id);
-}
 
 // start twitch portion of extension
 function start() {
