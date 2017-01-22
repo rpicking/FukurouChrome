@@ -12,11 +12,15 @@
   "content_scripts": [
     {
       "matches": [ "<all_urls>" ],
-      "js": [ "js/content_favorite.js", "js/jquery.min.js" ]
-    }
+      "js": [ "js/jquery.min.js", "js/jquery-ui.min.js", "js/content_favorite.js" ],
+      "css": [ "css/jquery-ui.min.css", "css/font-awesome.min.css" ],
+      "run_at":  "document_end"
+    }],
+  "web_accessible_resources": [
+    "jquery-ui/images*.png"
   ],
   "icons": {
-    "16":  "img/icon-16.png",
+    "16": "img/icon-16.png",
     "512": "img/icon-512.png"
   },
   "permissions": [

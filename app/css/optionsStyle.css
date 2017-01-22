@@ -1,31 +1,78 @@
 body {
-  font-family: 'Verdana';
+    font-family: 'Verdana';
 }
+
 #header {
-  font-size: 28px;
+    font-size: 28px;
 }
+
 .settings {
-  margin: 4px 4px 0 4px;
-  border: 1px solid #8c8c8c;
-  padding: 10px 10px 10px 10px;
-  display: inline-block;
-  font-weight: bold;
+    margin: 4px 4px 0 4px;
+    border: 1px solid #8c8c8c;
+    padding: 10px 10px 10px 10px;
+    display: inline-block;
+    font-weight: bold;
 }
+
 #username {
-  margin-left: 40px;
+    margin-left: 40px;
 }
 
 #footer {
-  margin: 10px 0 0 20px;
+    margin: 10px 0 0 20px;
 }
+
 #saveButton {
-  font-size: 16px;
-  font-weight: bold;
+    font-size: 16px;
+    font-weight: bold;
 }
+
 #indicator {
-  font-size: 15px;
-  margin-left: 10px;
-  color: #0040ff;
-  opacity: 0;
-  transition:opacity 1s linear;
+    font-size: 15px;
+    margin-left: 10px;
+    color: #0040ff;
+    opacity: 0;
+    transition:opacity 1s linear;
+}
+
+#savedFolders {
+    margin-top: 10px;
+}
+
+#savedFolders .settingName {
+    display: inline-block;
+    float: left;
+}
+
+#folderList {
+    display: inline-block;
+    float: right;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 80%;
+}
+
+#folderList li {
+    margin: 0 3px 3px 3px;
+    padding: 0.4em;
+    padding-left: 1.5em;
+    font-size: 1.4em;
+    height: 18px;
+    cursor: move;
+}
+
+#folderList li.fixed {
+    cursor: default;
+    color: #959595;
+    opacity: 0.5;
+}
+
+.fa-arrows-v {
+    position: absolute;
+    margin-left: -1.3em;
+}
+
+.fa-trash {
+    cursor: pointer;
 }

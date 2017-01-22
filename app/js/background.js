@@ -1,4 +1,4 @@
-chrome.contextMenus.create({
+/*chrome.contextMenus.create({
     title: 'Request Sync',
     contexts: ['all'],
     onclick: function (info) {
@@ -16,7 +16,7 @@ chrome.contextMenus.create({
         });
     }
 });
-chrome.contextMenus.create({ type: 'separator' });
+chrome.contextMenus.create({ type: 'separator' }); */
 
 // listen for messages from content_favorite content script
 chrome.runtime.onMessage.addListener(
@@ -42,7 +42,6 @@ function createMenu(folder) {
         title: "Add to: " + folder,
         contexts: ["all"],
         onclick: function (info) {
-            console.log(info);
             if (info.mediaType == undefined) {
                 console.log('not media');
             }
@@ -68,7 +67,7 @@ function sendDownload(srcUrl, pageUrl, domain, folder, comicLink, comicName, com
     comicName = comicName || '';
     comicPage = comicPage || '';
     artist = artist || '';
-
+    console.log(srcUrl);
     var cookies = [];
     chrome.cookies.getAll({ 'url': domain }, function (sitecookies) {
         var cookieslength = sitecookies.length;

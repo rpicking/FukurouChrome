@@ -2,7 +2,10 @@
 
 <head>
     <title> Fukurou - Options</title>
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css">
     <link rel="stylesheet" type="text/css" href="css/optionsStyle.css">
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+
 </head>
 
 <body>
@@ -10,8 +13,42 @@
 
     <form id="settingsform">
         <div class="settings">
-            Twitch.TV Username:
+            <span class="settingName">Twitch.TV Username:</span>
             <input type="text" id="username">
+
+            <input id="button1" type="button" value="add" />
+            <input id="button2" type="button" value="addLong" />
+            <input id="button3" type="button" value="printList" />
+            <div id="savedFolders">
+                <span class="settingName"><br />Saved Folders:</span>
+                <ul id="folderList">
+                    <li id="item-1" class="ui-state-default item">
+                        <span class="arrow fa fa-arrows-v fa-fw" aria-hidden="true"></span>
+                        <span class="delete fa fa-trash fa-fw pull-right" aria-hidden="true"></span>
+                        <div>Item 1</div>
+                    </li>
+                    <li id="item-2" class="ui-state-default item">
+                        <span class="arrow fa fa-arrows-v fa-fw" aria-hidden="true"></span>
+                        <span class="delete fa fa-trash fa-fw pull-right" aria-hidden="true"></span>
+                        <div>Item 2</div>
+                    </li>
+                    <li id="item-3" class="ui-state-default item">
+                        <span class="arrow fa fa-arrows-v fa-fw" aria-hidden="true"></span>
+                        <span class="delete fa fa-trash fa-fw pull-right" aria-hidden="true"></span>
+                        <div>Item 3</div>
+                    </li>
+                    <li id="item-4" class="ui-state-default item">
+                        <span class="arrow fa fa-arrows-v fa-fw" aria-hidden="true"></span>
+                        <span class="delete fa fa-trash fa-fw pull-right" aria-hidden="true"></span>
+                        <div>Item 4</div>
+                    </li>
+                    <li id="item-5" class="ui-state-default item">
+                        <span class="arrow fa fa-arrows-v fa-fw" aria-hidden="true"></span>
+                        <span class="delete fa fa-trash fa-fw pull-right" aria-hidden="true"></span>
+                        <div>Item 5</div>
+                    </li>
+                </ul>   
+            </div>        
         </div>
     </form>
 
@@ -20,6 +57,9 @@
         <span id="indicator">Options Saved</span>
     </div>
 
+    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery-ui.min.js"></script>
     <script src="js/options.js"></script>
+
 </body>
 </html>

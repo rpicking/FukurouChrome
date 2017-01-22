@@ -129,26 +129,6 @@ chrome.runtime.onMessage.addListener(
             parseTumblr(request.info, request.folder);
         }
         else {  // no custom processing
-            send_message(request.info.srcUrl, request.info.pageUrl, domain, request.folder);
+            send_message(request.info.srcUrl, request.info.pageUrl, request.folder);
         }
-
-        /*
-        var mediaType = request.info.mediaType;
-        if (mediaType != undefined) {   // image,video,audio (gif = video)
-
-        }
-        else {
-
-        }
-
-        switch(request.type) {
-            case "parseEx":
-                parseEhentai(request.srcUrl, request.pageUrl, request.domain, request.folder, "https://exhentai.org/api.php");
-                break;
-            case "parseG.e":
-                parseEhentai(request.srcUrl, request.pageUrl, request.domain, request.folder, "http://g.ehentai.org/api.php");
-                break;
-            default:
-                console.error("unrecognised message: ", request);
-        }*/
     });
