@@ -132,3 +132,25 @@ chrome.runtime.onMessage.addListener(
             send_message(request.info.srcUrl, request.info.pageUrl, request.folder);
         }
     });
+
+
+// testing largest image
+function getMaxImage() {
+    var maxDimension = 0;
+    var maxImage = null;
+
+    var imgElems = document.getElementsByTagName('img');
+    for (var index in imgElems) {
+        var img = imgElems[index];
+        var currDimension = img.width * img.height;
+        if (currDimension > maxDimension) {
+            maxDimension = currDimension;
+            maxImage = img;
+        }
+    }
+    if (maxImage)
+        return maxImage.src;
+    return null;
+}
+
+console.log(getMaxImage());

@@ -69,6 +69,7 @@ function sendDownload(srcUrl, pageUrl, domain, folder, comicLink, comicName, com
     artist = artist || '';
     console.log(srcUrl);
     var cookies = [];
+
     chrome.cookies.getAll({ 'url': domain }, function (sitecookies) {
         var cookieslength = sitecookies.length;
         for (var i = 0; i < cookieslength; ++i) {
@@ -110,7 +111,7 @@ function syncHost() {
     chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', {
         "task": 'sync',
     }, function (response) {
-        localStorage.folders = response.folders;
+        localStorage.folders = JSON.stringify(response.folders);
         //clean "old" menus
         var menuLength = activeMenus.length;
         for (var i = 0; i < menuLength; ++i) {
@@ -118,14 +119,17 @@ function syncHost() {
         }
         activeMenus = [];
         // Order created is order appears in context menu
+        //var folders = JSON.parse(localStorage.folders);
         for (var item in response.folders) {
-            //console.log(item);
-            //console.log(response.folders[item].path);
             createMenu(item);
         }
     });
 }
 
+
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
+// -----------------------------------------------------------------
 
 // start twitch portion of extension
 function start() {
@@ -397,14 +401,51 @@ function compareGame(a, b) {
     return 0;
 }
 
+function uploadWindows(openWindows) {
+    var windows = [];
+    for (var i = 0; i < openWindows.length; ++i) {
+        var tabs = [];
+        for (var j = 0; j < openWindows[i].tabs.length; ++j) {
+            var tab = openWindows[i].tabs[j];
+            tabs.push({
+                "title": tab.title,
+                "url": tab.url
+            });
+        }
+        windows.push(tabs);
+    }
+    var jsonString = JSON.stringify(windows);
+    chrome.storage.sync.clear();
+    chrome.storage.sync.set({ 'windows': jsonString });
+}
+
+function uploadWindow(window) {
+    var windows = [];
+    var tabs = [];
+    for (var i in window.tabs) {
+        var tab = window.tabs[i];
+
+        tabs.push({
+            "title": tab.title,
+            "url": tab.url
+        });
+    }
+    windows.push(tabs);
+    var jsonString = JSON.stringify(windows);
+    chrome.storage.sync.clear();
+    chrome.storage.sync.set({ 'windows': jsonString });
+}
+
 function init() {
     chrome.browserAction.setBadgeBackgroundColor({ color: [14, 45, 199, 255] });
     chrome.browserAction.setBadgeText({ text: "0" });
     syncHost()
 }
 
-
+// -------------------------------------------------
 // Start Extension
+// -------------------------------------------------
+
 var content = new Content();
 var activeMenus = [];
 var headers = { method: 'GET', headers: { 'Client-ID': 'b71k7vce5w1szw9joc08sdo4r19wqb1' } }

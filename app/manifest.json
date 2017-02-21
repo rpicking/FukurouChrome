@@ -3,7 +3,7 @@
 
   "name": "Fukurou",
   "description": "Extension for displaying a users followed online streams, and other misc.",
-  "version": "0.3.1",
+  "version": "0.3.2",
 
   "background": {
     "scripts": [ "js/background.js" ]
@@ -29,6 +29,7 @@
     "downloads",
     "nativeMessaging",
     "cookies",
+    "storage",
     "<all_urls>",
     "https://api.twitch.tv/*"
   ],
