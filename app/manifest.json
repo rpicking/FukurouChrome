@@ -30,6 +30,7 @@
     "nativeMessaging",
     "cookies",
     "storage",
+    "notifications",
     "<all_urls>",
     "https://api.twitch.tv/*"
   ],

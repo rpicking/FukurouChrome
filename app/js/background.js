@@ -25,9 +25,16 @@ chrome.runtime.onMessage.addListener(
     });
 
 
+chrome.notifications.onClicked.addListener(function (id) {
+    if (notificationId === id) {
+        chrome.tabs.create({ url: notificationUrl });
+    }
+});
+
 // srcUrl: url to download item
 // pageUrl: url to download item was gotten from
 // folder: folder name that item will be downloaded to (setup in host)
+// send message to content script for further processing
 function processDownload(info, folder) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         chrome.tabs.sendMessage(tabs[0].id, { "info": info, "folder": folder }, function (response) {
@@ -51,7 +58,8 @@ function createMenu(folder) {
     activeMenus.push(id);
 }
 
-/*  Sends download url and optional parameters to fukurou host
+/*  
+Sends download url and optional parameters to fukurou host
 srcUrl: url to item that is being downloaded
 pageUrl: url of the page that item downloaded from
 domain: domain of pageUrl
@@ -67,7 +75,6 @@ function sendDownload(srcUrl, pageUrl, domain, folder, comicLink, comicName, com
     comicName = comicName || '';
     comicPage = comicPage || '';
     artist = artist || '';
-    console.log(srcUrl);
     var cookies = [];
 
     chrome.cookies.getAll({ 'url': domain }, function (sitecookies) {
@@ -86,8 +93,29 @@ function sendDownload(srcUrl, pageUrl, domain, folder, comicLink, comicName, com
             "artist": artist,
             "cookies": cookies
         }, function (response) {
-            // response processing goes here
-            // success? failure?
+            var opt = {
+                type: "basic",
+                title: "Fukurou Downloader",
+                message: "",
+                iconUrl: "img/icon-512.png",
+            }
+            if (response.type === 'success') {
+                notificationUrl = response.pageUrl;
+
+                opt.message = response.filename + " added to " + response.folder;
+                opt.isClickable = true;
+                chrome.notifications.create(opt, function (id) {
+                    notificationId = id;
+                });
+                var audio = new Audio('audio/success-chime.mp3');
+                audio.play();
+            }
+            else {  // download failed
+                opt.message = "File failed to download. Reason: " + response.type;
+                chrome.notifications.create(opt);
+                var audio = new Audio('audio/error-chime.wav');
+                audio.play();
+            }
         });
     });
 }
@@ -112,11 +140,13 @@ function syncHost() {
         "task": 'sync',
     }, function (response) {
         localStorage.folders = JSON.stringify(response.folders);
+
         //clean "old" menus
         var menuLength = activeMenus.length;
         for (var i = 0; i < menuLength; ++i) {
             chrome.contextMenus.remove(activeMenus[i]);
         }
+
         activeMenus = [];
         // Order created is order appears in context menu
         //var folders = JSON.parse(localStorage.folders);
@@ -322,7 +352,7 @@ Content.prototype.searchGame = function (game) {
 // creates html for all games in this.games
 Content.prototype.createHTML = function () {
     var html = '';
-    if (this.streamCount == 0) {  // no current games
+    if (this.streamCount === 0) {  // no current games
         html = '<p id="vacant"> No streams online</p>';
     }
     else {
@@ -445,6 +475,9 @@ function init() {
 // -------------------------------------------------
 // Start Extension
 // -------------------------------------------------
+
+var notificationId = null;
+var notificationUrl = null;
 
 var content = new Content();
 var activeMenus = [];
