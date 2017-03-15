@@ -88,6 +88,7 @@ function send_req(apiUrl, data) {
 function send_message(srcUrl, pageUrl, folder, comicLink, comicName, comicPage, artist) {
     var domain = extractDomain(pageUrl);
     chrome.runtime.sendMessage({
+            "type": "download",
             "srcUrl": srcUrl,
             "pageUrl": pageUrl,
             "domain": domain,
@@ -96,9 +97,7 @@ function send_message(srcUrl, pageUrl, folder, comicLink, comicName, comicPage, 
             "comicName": comicName,
             "comicPage": comicPage,
             "artist": artist,
-        }, function (response) {
-
-    });
+        }, function (response) { });
 }
 
 // returns domain name from url
@@ -122,8 +121,8 @@ chrome.runtime.onMessage.addListener(
         if (request.info.pageUrl.indexOf("exhentai.org") > -1) {
             parseEhentai(request.info.srcUrl, request.info.pageUrl, request.folder, "https://exhentai.org/api.php");
         }
-        else if (request.info.pageUrl.indexOf("g.e-hentai.org") > -1) {
-            parseEhentai(request.srcUrl, request.pageUrl, request.folder, "http://g.ehentai.org/api.php");
+        else if (request.info.pageUrl.indexOf("e-hentai.org") > -1) {
+            parseEhentai(request.srcUrl, request.pageUrl, request.folder, "http://e-hentai.org/api.php");
         }
         else if (request.info.pageUrl.indexOf("tumblr.com") > -1) {
             parseTumblr(request.info, request.folder);
