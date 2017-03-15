@@ -122,7 +122,7 @@ chrome.runtime.onMessage.addListener(
             parseEhentai(request.info.srcUrl, request.info.pageUrl, request.folder, "https://exhentai.org/api.php");
         }
         else if (request.info.pageUrl.indexOf("e-hentai.org") > -1) {
-            parseEhentai(request.srcUrl, request.pageUrl, request.folder, "http://e-hentai.org/api.php");
+            parseEhentai(request.srcUrl, request.pageUrl, request.folder, "https://api.e-hentai.org/api.php");
         }
         else if (request.info.pageUrl.indexOf("tumblr.com") > -1) {
             parseTumblr(request.info, request.folder);
