@@ -21,7 +21,15 @@ chrome.contextMenus.create({ type: 'separator' }); */
 // listen for messages from content_favorite content script
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
-        sendDownload(request.srcUrl, request.pageUrl, request.domain, request.folder, request.comicLink, request.comicName, request.comicPage, request.artist);
+        switch (request.type) {
+            case "download":
+                sendDownload(request.srcUrl, request.pageUrl, request.domain, request.folder, request.comicLink, request.comicName, request.comicPage, request.artist);
+                break;
+            case "edit":
+                console.log(request.uid + " " + request.name);
+                editFolder(request.uid, request.name);
+                break;
+        }
     });
 
 
@@ -56,6 +64,17 @@ function createMenu(folder) {
         }
     });
     activeMenus.push(id);
+}
+
+// sends message to host to edit folder name for folder with uid
+function editFolder(uid, name) {
+    chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', {
+        "task": "edit",
+        "uid": uid,
+        "name": name
+    }, function (response) {
+        console.log(response);
+    });
 }
 
 /*  
@@ -142,6 +161,7 @@ function syncHost() {
         localStorage.folders = JSON.stringify(response.folders);
 
         //clean "old" menus
+        folders = [];
         var menuLength = activeMenus.length;
         for (var i = 0; i < menuLength; ++i) {
             chrome.contextMenus.remove(activeMenus[i]);
@@ -151,6 +171,9 @@ function syncHost() {
         // Order created is order appears in context menu
         //var folders = JSON.parse(localStorage.folders);
         for (var item in response.folders) {
+            var tmp = response.folders[item];
+            tmp['name'] = item;
+            folders.push(tmp);
             createMenu(item);
         }
     });
@@ -158,7 +181,7 @@ function syncHost() {
 
 
 // -----------------------------------------------------------------
-// -----------------------------------------------------------------
+// --------------------- TWITCH.TV ---------------------------------
 // -----------------------------------------------------------------
 
 // start twitch portion of extension
@@ -478,6 +501,7 @@ function init() {
 
 var notificationId = null;
 var notificationUrl = null;
+var folders = [];
 
 var content = new Content();
 var activeMenus = [];
