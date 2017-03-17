@@ -67,9 +67,7 @@ function createMenu(folder) {
 
 // sends message to host to edit folder name for folder with uid
 function editFolder(payload) {
-    console.log(payload);
     chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', payload, function (response) {
-        console.log(response);
         if (response.type === "success") {
             syncHost();
         }
