@@ -88,7 +88,7 @@ function send_req(apiUrl, data) {
 function send_message(srcUrl, pageUrl, folder, comicLink, comicName, comicPage, artist) {
     var domain = extractDomain(pageUrl);
     chrome.runtime.sendMessage({
-            "type": "download",
+            "task": "download",
             "srcUrl": srcUrl,
             "pageUrl": pageUrl,
             "domain": domain,

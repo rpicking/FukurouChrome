@@ -6,9 +6,11 @@
     var save;
 
     function saveSettings() {
-        localStorage.username = usernameInput.value;
-
-        chrome.extension.getBackgroundPage().start();
+        var username = usernameInput.value;
+        if (username != localStorage.username) {
+            localStorage.username = username;
+            chrome.extension.getBackgroundPage().start();
+        }
 
         var indicator = document.getElementById("indicator");
         indicator.style.opacity = 1;
@@ -29,6 +31,7 @@
         save = document.getElementById("saveButton");
         save.onclick = saveSettings;
 
+        // populate list with folders
         var folders = chrome.extension.getBackgroundPage().folders;
         for (var i = 0; i < folders.length; ++i) {
             addElement(folders[i]['name'], folders[i]['uid']);
@@ -40,7 +43,6 @@
 
 // global variables
 var curName = null;
-
 
 // event listeners
 document.getElementById("button1").addEventListener("click", function () {
@@ -54,19 +56,11 @@ document.getElementById("button3").addEventListener("click", function () {
     printList();
 });
 
-/* not needed using ('body').on ?!?!?
-[].forEach.call(document.getElementsByClassName("item"), function (el) {
-    el.addEventListener('dblclick', function () {
-        editItem(this);
-    });
-});*/
-
-
 $("#folderList").sortable({
     cancel: ".fixed",
     axis: 'y',
     update: function (event, ui) {
-        printList();
+        updateOrder();
     }
 });
 
@@ -75,10 +69,6 @@ $('body').on('click', '.delete', function () {
     // Find the parent of the element clicked (an li) and remove it
     $(this).parent().remove();
 });
-/*$('.delete').live('click', function () {
-    // Find the parent of the element clicked (an li) and remove it
-    $(this).parent().remove();
-});*/
 
 $(document).keypress(function (e) {
     var input = document.getElementsByClassName("editItem");
@@ -92,42 +82,35 @@ $('body').on('dblclick', '.item', function () {
     editItem(this);
 });
 
+
+// "sets" input into list item and if different send message to background to change
 function closeInput() {
     var inputParent = document.getElementsByClassName("editItem")[0].parentElement;
     var value = $(".editItem").val();
     inputParent.innerHTML = value;
+    $("#folderList").sortable("enable");
+
+    var folders = [];
+    folders.push({ "uid": inputParent.parentElement.id.replace("item-", ""), "name": value });
 
     if (value != curName) {
-        chrome.runtime.sendMessage({
-            "type": "edit",
-            "uid": inputParent.parentElement.id.replace("item-", ""),
-            "name": value
-        }, function (response) { });
+        var payload = {
+            "task": "edit",
+            "folders": JSON.stringify(folders)
+        };
+        chrome.runtime.sendMessage(payload, function (response) { });
     }
 }
 
 function editItem(currentEle) {
-    var test = currentEle.getElementsByTagName("div")[0];
-    var value = test.innerText;
+    $("#folderList").sortable("disable");
+
+    var div = currentEle.getElementsByTagName("div")[0];
+    var value = div.innerText;
 
     curName = value;
-    test.innerHTML = '<input class="editItem" type="text" value="' + value + '" />';
+    div.innerHTML = '<input class="editItem" type="text" value="' + value + '" />';
     document.getElementsByClassName("editItem")[0].focus();
-    return;
-  
-    //currentEle.classList.remove("item");
-    //currentEle.classList.add("editItem");
-
-    var editable = document.createElement("input");
-    editable.className = "editItem";
-    editable.setAttribute("type", "text");
-    editable.setAttribute("value", value);
-    currentEle.getElementsByTagName("div")[0].appendChild(editable);
-    //currentEle.getElementsByTagName("div")[0].innerText = "";
-    
-
-    //test.innerHTML = '<input class="editItem" type="text" value="' + value + '" />';
-    //document.getElementsByClassName("editItem")[0].focus();
 }
 
 function map(htmlArray) {
@@ -138,18 +121,34 @@ function map(htmlArray) {
     return ret;
 }
 
-function printList() {
+function updateOrder() {
     $("#folderList").sortable("refreshPositions");
     var idsInOrder = $("#folderList").sortable("toArray");
-    console.log(idsInOrder);
+
+    var folders = chrome.extension.getBackgroundPage().folders;
+    var edit_folders = [];
+
+    for (var i = 0; i < idsInOrder.length; ++i) {
+        var uid = idsInOrder[i].replace("item-", "");
+
+        // search for folder by uid and check if order changed
+        for (var j = 0; j < folders.length; ++j) {
+            if ((uid === folders[j].uid) && ((i + 1) != folders[j].order)) {
+                edit_folders.push({ "uid": uid, "order": i + 1 });
+                break;
+            }
+        }
+    }
+    var payload = {
+        "task": "edit",
+        "folders": JSON.stringify(edit_folders)
+    };
+    chrome.runtime.sendMessage(payload, function (response) { });
 }
 
 // creates new list element with id item- + uid and at given position
 //      if position not set then defaults to end of list
 function addElement(name, uid, position) {
-    
-    //var uid = "7";	//fix me later in host
-
     var list = document.getElementById("folderList");
     var listItems = list.getElementsByTagName("li");
     var li = document.createElement("li");

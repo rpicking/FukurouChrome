@@ -21,13 +21,12 @@ chrome.contextMenus.create({ type: 'separator' }); */
 // listen for messages from content_favorite content script
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
-        switch (request.type) {
+        switch (request.task) {
             case "download":
                 sendDownload(request.srcUrl, request.pageUrl, request.domain, request.folder, request.comicLink, request.comicName, request.comicPage, request.artist);
                 break;
             case "edit":
-                console.log(request.uid + " " + request.name);
-                editFolder(request.uid, request.name);
+                editFolder(request);
                 break;
         }
     });
@@ -67,13 +66,13 @@ function createMenu(folder) {
 }
 
 // sends message to host to edit folder name for folder with uid
-function editFolder(uid, name) {
-    chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', {
-        "task": "edit",
-        "uid": uid,
-        "name": name
-    }, function (response) {
+function editFolder(payload) {
+    console.log(payload);
+    chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', payload, function (response) {
         console.log(response);
+        if (response.type === "success") {
+            syncHost();
+        }
     });
 }
 
@@ -174,7 +173,12 @@ function syncHost() {
             var tmp = response.folders[item];
             tmp['name'] = item;
             folders.push(tmp);
-            createMenu(item);
+        }
+        folders.sort(function (a, b) {
+            return a.order > b.order;
+        });
+        for (var i = 0; i < folders.length; ++i) {
+            createMenu(folders[i].name);
         }
     });
 }
