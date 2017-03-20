@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
             location.reload();
         }, 1000);
     });
+
     var upload = document.getElementById("cloudsync");
     upload.addEventListener('click', function () {
         /*chrome.windows.getAll({ "populate": true, "windowTypes": ['normal'] }, function (openWindows) {
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
             chrome.extension.getBackgroundPage().uploadWindow(window);
         });
     });
+
     var open = document.getElementById("open");
     open.addEventListener('click', function () {
         chrome.storage.sync.get('windows', function (obj) {

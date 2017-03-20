@@ -262,7 +262,6 @@ function getStreamData(name, dispName) {
         });
 }
 
-
 // Class for stream data asked for by popup
 // Content.games[]
 //    Game.streams[]
@@ -393,7 +392,6 @@ Content.prototype.createHTML = function () {
     return html;
 }
 
-
 // class for game
 function Game(game) {
     this.game = game;
@@ -406,7 +404,9 @@ Game.prototype.createHTML = function () {
 
     this.streams.sort(compareViews);
     for (var i = 0; i < this.streams.length; ++i) {
-        html += '<a class="game stream" target="_blank" style="float:left" href="' + this.streams[i].link + '">' + '<img class="site" src="img/twitch.png">' + this.streams[i].name + '<span style="float:right;">' + this.streams[i].views + '</span><hr class="hr1"></a>';
+        html += '<a class="game stream" target="_blank" style="float:left" href="' + this.streams[i].link +
+            '">' + '<img class="site" src="img/twitch.png">' + this.streams[i].name +
+            '<span style="float:right;">' + this.streams[i].views + '</span><hr class="hr1"></a>';
     }
 
     return html;
@@ -456,6 +456,10 @@ function compareGame(a, b) {
     return 0;
 }
 
+// -------------------------------------
+// -----------END TWITCH ---------------
+// -------------------------------------
+
 function uploadWindows(openWindows) {
     var windows = [];
     for (var i = 0; i < openWindows.length; ++i) {
@@ -474,6 +478,7 @@ function uploadWindows(openWindows) {
     chrome.storage.sync.set({ 'windows': jsonString });
 }
 
+// upload all open tab urls in window to sync
 function uploadWindow(window) {
     var windows = [];
     var tabs = [];
@@ -486,6 +491,7 @@ function uploadWindow(window) {
         });
     }
     windows.push(tabs);
+
     var jsonString = JSON.stringify(windows);
     chrome.storage.sync.clear();
     chrome.storage.sync.set({ 'windows': jsonString });

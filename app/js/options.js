@@ -15,6 +15,44 @@
         var indicator = document.getElementById("indicator");
         indicator.style.opacity = 1;
 
+        // build name/order change message
+        var edit_folders = [];
+        var folders = chrome.extension.getBackgroundPage().folders;
+        
+        $("#folderList").sortable("refreshPositions");
+        var idsInOrder = $("#folderList").sortable("toArray");
+
+        loop1:
+        for (var i = 0; i < idsInOrder.length; ++i) {
+            var uid = idsInOrder[i].replace("item-", "");
+            var new_name = document.getElementById(idsInOrder[i]).getElementsByTagName("div")[0].innerText;
+
+            loop2:
+            for (var j = 0; j < folders.length; ++j) {
+                if (uid === folders[j].uid) {
+                    var tmp = { 'uid': uid };
+                    var push_check = false;
+                    if (new_name != folders[j].name) {
+                        tmp['name'] = new_name;
+                        push_check = true;
+                    }
+                    if ((i + 1) != folders[j].order) {
+                        tmp['order'] = i + 1;
+                        push_check = true;
+                    }
+                    if (push_check) {
+                        edit_folders.push(tmp);
+                    }
+                    break loop2;
+                }
+            }
+        }
+        var payload = {
+            "task": "edit",
+            "folders": JSON.stringify(edit_folders)
+        };
+        chrome.runtime.sendMessage(payload, function (response) {});
+
         setTimeout(function () {
             indicator.style.opacity = 0;
         }, 4000);
@@ -58,10 +96,7 @@ document.getElementById("button3").addEventListener("click", function () {
 
 $("#folderList").sortable({
     cancel: ".fixed",
-    axis: 'y',
-    update: function (event, ui) {
-        updateOrder();
-    }
+    axis: 'y'
 });
 
 // As you are using jQuery 1.6 'live' allows you to bind events to elements that do not exist yet
@@ -89,19 +124,9 @@ function closeInput() {
     var value = $(".editItem").val();
     inputParent.innerHTML = value;
     $("#folderList").sortable("enable");
-
-    var folders = [];
-    folders.push({ "uid": inputParent.parentElement.id.replace("item-", ""), "name": value });
-
-    if (value != curName) {
-        var payload = {
-            "task": "edit",
-            "folders": JSON.stringify(folders)
-        };
-        chrome.runtime.sendMessage(payload, function (response) { });
-    }
 }
 
+// enable editing of displayed name of list item
 function editItem(currentEle) {
     $("#folderList").sortable("disable");
 
@@ -111,39 +136,6 @@ function editItem(currentEle) {
     curName = value;
     div.innerHTML = '<input class="editItem" type="text" value="' + value + '" />';
     document.getElementsByClassName("editItem")[0].focus();
-}
-
-function map(htmlArray) {
-    var ret = [];
-    for (var i = 0; i < htmlArray.length; ++i) {
-        ret.push(htmlArray[i].outerText);
-    }
-    return ret;
-}
-
-function updateOrder() {
-    $("#folderList").sortable("refreshPositions");
-    var idsInOrder = $("#folderList").sortable("toArray");
-
-    var folders = chrome.extension.getBackgroundPage().folders;
-    var edit_folders = [];
-
-    for (var i = 0; i < idsInOrder.length; ++i) {
-        var uid = idsInOrder[i].replace("item-", "");
-
-        // search for folder by uid and check if order changed
-        for (var j = 0; j < folders.length; ++j) {
-            if ((uid === folders[j].uid) && ((i + 1) != folders[j].order)) {
-                edit_folders.push({ "uid": uid, "order": i + 1 });
-                break;
-            }
-        }
-    }
-    var payload = {
-        "task": "edit",
-        "folders": JSON.stringify(edit_folders)
-    };
-    chrome.runtime.sendMessage(payload, function (response) { });
 }
 
 // creates new list element with id item- + uid and at given position
