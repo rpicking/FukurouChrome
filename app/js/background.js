@@ -1,54 +1,131 @@
-/*chrome.contextMenus.create({
-    title: 'Request Sync',
-    contexts: ['all'],
-    onclick: function (info) {
-        chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', {
-            "task": 'sync',
-        }, function (response) {
-            console.log(response);
-            for (var item in response.folders) {
-                console.log(item);
-                console.log(response.folders[item].path);
-            }
-            //var len = response.folders
-            // response processing goes here
-            // success? failure?
-        });
-    }
-});
-chrome.contextMenus.create({ type: 'separator' }); */
-
-// listen for messages from content_favorite content script
-chrome.runtime.onMessage.addListener(
-    function (request, sender, sendResponse) {
-        switch (request.task) {
-            case "download":
-                sendDownload(request.srcUrl, request.pageUrl, request.domain, request.folder, request.comicLink, request.comicName, request.comicPage, request.artist);
-                break;
-            case "edit":
-                editFolder(request);
-                break;
-        }
-    });
-
-
+// listen for click on notification popup
 chrome.notifications.onClicked.addListener(function (id) {
     if (notificationId === id) {
         chrome.tabs.create({ url: notificationUrl });
     }
 });
 
-// srcUrl: url to download item
-// pageUrl: url to download item was gotten from
-// folder: folder name that item will be downloaded to (setup in host)
-// send message to content script for further processing
-function processDownload(info, folder) {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, { "info": info, "folder": folder }, function (response) {
-            // reponse processing goes here
-        });
+// listen for messages from other scripts
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    switch (request.task) {
+        case "save":
+            sendDownload(request);
+            break;
+        case "edit":
+            sendMessage(request);
+            break;
+    }
+});
+
+/*  
+Sends download url and optional parameters to fukurou host
+task: save
+srcUrl: url to item that is being downloaded
+pageUrl: url of the page that item downloaded from
+domain: domain of pageUrl
+folder: name in folder file will be downloaded to
+comicLink: *OPTIONAL* url of comic that item is from
+comicName: *OPTIONAL* name of comic
+comicPage: *OPTIONAL* page number of item
+artist: *OPTIONAL* artist/artists parent manga
+cookies: cookies from domain
+*/
+function sendDownload(payload) {
+    var cookies = [];
+    chrome.cookies.getAll({ 'url': payload.domain }, function (sitecookies) {
+        var cookieslength = sitecookies.length;
+        for (var i = 0; i < cookieslength; ++i) {
+            cookies.push([sitecookies[i].name, sitecookies[i].value]);
+        }
+        payload.cookies = cookies;
+        delete payload.domain;
+        sendMessage(payload);
     });
 }
+
+/*
+Sends message to host with payload
+Sent messages must have task key
+Response must include task and type keys
+    task = task of original message
+    type = success, failure, or crash
+*/    
+function sendMessage(payload) {
+    chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', payload, function (response) {
+        switch (response.task) {
+            // --- SYNC ---
+            case 'sync':
+                localStorage.folders = JSON.stringify(response.folders);
+
+                //clean "old" menus
+                folders = [];
+                var menuLength = activeMenus.length;
+                for (var i = 0; i < menuLength; ++i) {
+                    chrome.contextMenus.remove(activeMenus[i]);
+                }
+
+                activeMenus = [];
+                // Order created is order appears in context menu
+                for (var item in response.folders) {
+                    var tmp = response.folders[item];
+                    tmp['name'] = item;
+                    folders.push(tmp);
+                }
+                folders.sort(function (a, b) {
+                    return a.order > b.order;
+                });
+                for (var i = 0; i < folders.length; ++i) {
+                    createMenu(folders[i].name);
+                }
+                break;
+
+                // --- EDIT ---
+            case 'edit':
+                if (response.type === "success") {
+                    sendMessage({ 'task': 'sync' });
+                }
+                else {
+                    console.log('edit failure');
+                    console.log(response);
+                }
+                break;
+
+                // --- SAVE ---
+            case 'save':
+                var opt = {
+                    type: "basic",
+                    title: "Fukurou Downloader",
+                    message: "",
+                    iconUrl: "img/icon-512.png",
+                }
+
+                if (response.type === 'success') {
+                    notificationUrl = response.pageUrl;
+
+                    opt.message = response.filename + " added to " + response.folder;
+                    opt.isClickable = true;
+                    chrome.notifications.create(opt, function (id) {
+                        notificationId = id;
+                    });
+                    var audio = new Audio('audio/success-chime.mp3');
+                    audio.play();
+                }
+                else {  // download failed
+                    opt.message = "File failed to download. Reason: " + response.type;
+                    chrome.notifications.create(opt);
+                    var audio = new Audio('audio/error-chime.wav');
+                    audio.play();
+                }
+                break;
+
+                // --- DEFAULT ---
+            default:
+                console.log('Task not implemented or present')
+                console.log(response);
+        }
+    });
+}
+
 
 // creates menu item
 function createMenu(folder) {
@@ -65,73 +142,12 @@ function createMenu(folder) {
     activeMenus.push(id);
 }
 
-// sends message to host to edit folder name for folder with uid
-function editFolder(payload) {
-    chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', payload, function (response) {
-        if (response.type === "success") {
-            syncHost();
-        }
-    });
-}
-
-/*  
-Sends download url and optional parameters to fukurou host
-srcUrl: url to item that is being downloaded
-pageUrl: url of the page that item downloaded from
-domain: domain of pageUrl
-folder: name in folder file will be downloaded to
-comicLink: *OPTIONAL* url of comic that item is from
-comicName: *OPTIONAL* name of comic
-comicPage: *OPTIONAL* page number of item
-artist: *OPTIONAL* artist/artists parent manga
-cookies: cookies from pageUrl domain
-*/
-function sendDownload(srcUrl, pageUrl, domain, folder, comicLink, comicName, comicPage, artist) {
-    comicLink = comicLink || '';  // set default parameters PRE ES2015?
-    comicName = comicName || '';
-    comicPage = comicPage || '';
-    artist = artist || '';
-    var cookies = [];
-
-    chrome.cookies.getAll({ 'url': domain }, function (sitecookies) {
-        var cookieslength = sitecookies.length;
-        for (var i = 0; i < cookieslength; ++i) {
-            cookies.push([sitecookies[i].name, sitecookies[i].value]);
-        }
-        chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', {
-            "task": "save",
-            "folder": folder, // name of saved folder in config
-            "srcUrl": srcUrl,
-            "pageUrl": pageUrl,
-            "comicLink": comicLink,
-            "comicName": comicName,
-            "comicPage": comicPage,
-            "artist": artist,
-            "cookies": cookies
-        }, function (response) {
-            var opt = {
-                type: "basic",
-                title: "Fukurou Downloader",
-                message: "",
-                iconUrl: "img/icon-512.png",
-            }
-            if (response.type === 'success') {
-                notificationUrl = response.pageUrl;
-
-                opt.message = response.filename + " added to " + response.folder;
-                opt.isClickable = true;
-                chrome.notifications.create(opt, function (id) {
-                    notificationId = id;
-                });
-                var audio = new Audio('audio/success-chime.mp3');
-                audio.play();
-            }
-            else {  // download failed
-                opt.message = "File failed to download. Reason: " + response.type;
-                chrome.notifications.create(opt);
-                var audio = new Audio('audio/error-chime.wav');
-                audio.play();
-            }
+// folder: folder name that item will be downloaded to (setup in host)
+// send message to content script for further processing
+function processDownload(info, folder) {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, { "info": info, "folder": folder }, function (response) {
+            // reponse processing goes here
         });
     });
 }
@@ -149,38 +165,6 @@ function extractDomain(url) {
     }
     return url;
 }
-
-// send message requesting folders from host, and create context menus for each
-function syncHost() {
-    chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', {
-        "task": 'sync',
-    }, function (response) {
-        localStorage.folders = JSON.stringify(response.folders);
-
-        //clean "old" menus
-        folders = [];
-        var menuLength = activeMenus.length;
-        for (var i = 0; i < menuLength; ++i) {
-            chrome.contextMenus.remove(activeMenus[i]);
-        }
-
-        activeMenus = [];
-        // Order created is order appears in context menu
-        //var folders = JSON.parse(localStorage.folders);
-        for (var item in response.folders) {
-            var tmp = response.folders[item];
-            tmp['name'] = item;
-            folders.push(tmp);
-        }
-        folders.sort(function (a, b) {
-            return a.order > b.order;
-        });
-        for (var i = 0; i < folders.length; ++i) {
-            createMenu(folders[i].name);
-        }
-    });
-}
-
 
 // -----------------------------------------------------------------
 // --------------------- TWITCH.TV ---------------------------------
@@ -500,7 +484,7 @@ function uploadWindow(window) {
 function init() {
     chrome.browserAction.setBadgeBackgroundColor({ color: [14, 45, 199, 255] });
     chrome.browserAction.setBadgeText({ text: "0" });
-    syncHost()
+    sendMessage({ 'task': 'sync' });
 }
 
 // -------------------------------------------------

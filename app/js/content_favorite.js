@@ -84,11 +84,11 @@ function send_req(apiUrl, data) {
     });
 }
 
-// Sends required info back to background for passing to download app
+// Sends required info back to background for passing to host
 function send_message(srcUrl, pageUrl, folder, comicLink, comicName, comicPage, artist) {
     var domain = extractDomain(pageUrl);
     chrome.runtime.sendMessage({
-            "task": "download",
+            "task": "save",
             "srcUrl": srcUrl,
             "pageUrl": pageUrl,
             "domain": domain,
