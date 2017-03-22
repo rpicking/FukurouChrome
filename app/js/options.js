@@ -51,7 +51,7 @@
             "task": "edit",
             "folders": JSON.stringify(edit_folders)
         };
-        chrome.runtime.sendMessage(payload, function (response) {});
+        sendMessage(payload);
 
         setTimeout(function () {
             indicator.style.opacity = 0;
@@ -101,7 +101,14 @@ $("#folderList").sortable({
 
 // As you are using jQuery 1.6 'live' allows you to bind events to elements that do not exist yet
 $('body').on('click', '.delete', function () {
-    // Find the parent of the element clicked (an li) and remove it
+    var uid = $(this).parent()[0].id.replace("item-", "");
+    edit_folders = [];
+    edit_folders.push({ 'uid': uid });
+    payload = {
+        'task': 'delete',
+        'folders': JSON.stringify(edit_folders)
+    }
+    sendMessage(payload);
     $(this).parent().remove();
 });
 
@@ -117,6 +124,13 @@ $('body').on('dblclick', '.item', function () {
     editItem(this);
 });
 
+
+function sendMessage(payload) {
+    console.log(payload);
+    chrome.runtime.sendMessage(payload, function (response) {
+
+    });
+}
 
 // "sets" input into list item and if different send message to background to change
 function closeInput() {

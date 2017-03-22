@@ -11,7 +11,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         case "save":
             sendDownload(request);
             break;
-        case "edit":
+        default:
             sendMessage(request);
             break;
     }
@@ -51,10 +51,10 @@ Response must include task and type keys
     type = success, failure, or crash
 */    
 function sendMessage(payload) {
+    console.log(payload);
     chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', payload, function (response) {
         switch (response.task) {
-            // --- SYNC ---
-            case 'sync':
+            case 'sync':    // --- SYNC ---
                 localStorage.folders = JSON.stringify(response.folders);
 
                 //clean "old" menus
@@ -79,8 +79,7 @@ function sendMessage(payload) {
                 }
                 break;
 
-                // --- EDIT ---
-            case 'edit':
+            case 'edit':    // --- EDIT ---
                 if (response.type === "success") {
                     sendMessage({ 'task': 'sync' });
                 }
@@ -90,8 +89,34 @@ function sendMessage(payload) {
                 }
                 break;
 
-                // --- SAVE ---
-            case 'save':
+            case 'delete':  // --- DELETE ---
+                var opt = {
+                    type: "basic",
+                    title: "Fukurou Downloader",
+                    message: "",
+                    iconUrl: "img/icon-512.png",
+                }
+
+                if (response.type === "success") {
+                    sendMessage({ 'task': 'sync' });
+
+                    opt.message = 'Successfully deleted folder "' + response.name + '" with uid: ' + response.uid;
+                    opt.isClickable = false;
+                    chrome.notifications.create(opt);
+                    var audio = new Audio('audio/success-chime.mp3');
+                    audio.play();
+                }
+                else {
+                    opt.message = "Failed to delete folder";
+                    chrome.notifications.create(opt);
+                    var audio = new Audio('audio/error-chime.wav');
+                    audio.play();
+                    console.log('delete failure');
+                    console.log(response);
+                }
+                break;
+
+            case 'save':    // --- SAVE ---
                 var opt = {
                     type: "basic",
                     title: "Fukurou Downloader",
