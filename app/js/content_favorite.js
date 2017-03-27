@@ -122,7 +122,7 @@ chrome.runtime.onMessage.addListener(
             parseEhentai(request.info.srcUrl, request.info.pageUrl, request.folder, "https://exhentai.org/api.php");
         }
         else if (request.info.pageUrl.indexOf("e-hentai.org") > -1) {
-            parseEhentai(request.srcUrl, request.pageUrl, request.folder, "https://api.e-hentai.org/api.php");
+            parseEhentai(request.srcUrl, request.pageUrl, request.folder, "https://api.ehentai.org/api.php");
         }
         else if (request.info.pageUrl.indexOf("tumblr.com") > -1) {
             parseTumblr(request.info, request.folder);
@@ -152,4 +152,26 @@ function getMaxImage() {
     return null;
 }
 
-console.log(getMaxImage());
+function start() {
+    var url = document.URL;
+    if (url.indexOf("e-hentai.org") > -1) {
+        chrome.storage.local.get('redirectEH', function (item) {
+            if (item.redirectEH) {
+                var redirect = [
+                        "e-hentai.org/g/",
+                        "e-hentai.org/s/"
+                ];
+
+                for (var i = 0; i < redirect.length; ++i) {
+                    if (url.indexOf(redirect[i]) > -1) {
+                        url = url.replace("-", 'x');
+                        window.location.href = url;
+                        return;
+                    }
+                }
+            }
+        });
+    }
+}
+
+start();

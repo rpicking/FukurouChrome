@@ -6,15 +6,24 @@
     var save;
 
     function saveSettings() {
+        var indicator = document.getElementById("indicator");
+        indicator.style.opacity = 1;
+
+        // username
         var username = usernameInput.value;
         if (username != localStorage.username) {
             localStorage.username = username;
             chrome.extension.getBackgroundPage().start();
         }
 
-        var indicator = document.getElementById("indicator");
-        indicator.style.opacity = 1;
-
+        // redirect EHentai
+        var redirectEH = document.getElementById("redirectEHswitch").checked;
+        chrome.storage.local.get('redirectEH', function (item) {
+            if (redirectEH != item.redirectEH) {
+                chrome.storage.local.set({ 'redirectEH': redirectEH });
+            }
+        });
+        
         // build name/order change message
         var edit_folders = [];
         var folders = chrome.extension.getBackgroundPage().folders;
@@ -47,11 +56,16 @@
                 }
             }
         }
+        if (edit_folders.length === 0) {
+            return
+        }
+
         var payload = {
             "task": "edit",
             "folders": JSON.stringify(edit_folders)
         };
         sendMessage(payload);
+
 
         setTimeout(function () {
             indicator.style.opacity = 0;
@@ -59,13 +73,23 @@
     }
 
     function start() {
+        // twitch.tv username
         var username = localStorage.username;
         usernameInput = document.getElementById("username");
 
         if (username) {
             usernameInput.value = username;
         }
+
+        // redirect from ehentai
+        chrome.storage.local.get('redirectEH', function (item) {
+            console.log(item.redirectEH);
+            if (item.redirectEH != undefined) {
+                document.getElementById("redirectEHswitch").checked = item.redirectEH;
+            }
+        });
         
+        // setup save button
         save = document.getElementById("saveButton");
         save.onclick = saveSettings;
 
@@ -81,18 +105,6 @@
 
 // global variables
 var curName = null;
-
-// event listeners
-document.getElementById("button1").addEventListener("click", function () {
-    addElement('bigdog', 01234, 2);
-});
-
-document.getElementById("button2").addEventListener("click", function () {
-    addElement('cat', 98765);
-});
-document.getElementById("button3").addEventListener("click", function () {
-    printList();
-});
 
 $("#folderList").sortable({
     cancel: ".fixed",

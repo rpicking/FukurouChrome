@@ -1,19 +1,30 @@
-# FukurouChromeExt
-Personal chrome extension.  Features include showing online followed twitch streams.
-### Currently working on: Saved options
+Fukurou Extension
+-------------
+Extension to be paired with the host from the main application.  Main functionality includes
+one click downloading to custom folders saved in the Fukurou host application.
 
-## Finished Features
+Features
+-------------
+* One-click downloading to custom folders in host application
+* Editing/reordering custom folder in browser
+* Custom download behavior for sites
+  * Ex/Ehentai
+    * Download best quality of image
+    * Send gallery tags to host (currently unused)
+  * Tumblr
+    * One click download for videos
 * Live followed twitch streams (ordered and catagorized)
-* Badge shows number of streams online
-* Refresh button
-* Options page
- * Save Twitch.tv Username
 
-## Planned Features
-In no particular order.
-* Improve look of popup
-* Add other streaming platform support
- * Youtube 
- * Azubu
+
+Planned Features
+-------------
+* Displaying/editing host download history
+* Adding new directory from extension
+* Proper dynamic content script for sites
+  * Remove need for "hardcoded" content scripts
+  * Load/unload script from extension without reload
+* Add other streaming platforms
+  * Youtube
+  * Azubu
 * Tabs showing all streamers in favorited games
-* Right-click download best quality
+

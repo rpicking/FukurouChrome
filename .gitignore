@@ -3,3 +3,4 @@ Properties/
 obj/
 FukurouChrome.csproj
 index.htm
+*.TMP

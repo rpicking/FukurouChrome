@@ -16,14 +16,16 @@
             <span class="settingName">Twitch.TV Username:</span>
             <input type="text" id="username">
 
-            <input id="button1" type="button" value="add" />
-            <input id="button2" type="button" value="addLong" />
-            <input id="button3" type="button" value="printList" />
+
+            <div id="redirectEH" class="setting">
+                <span class="fieldname">Redirect from EHentai:</span>
+                <input type="checkbox" id="redirectEHswitch" name="some-switch">
+                <label for="redirectEHswitch"></label>
+            </div>
+
             <div id="savedFolders">
-                <span class="settingName"><br />Saved Folders:</span>
-                <ul id="folderList">
-                    
-                </ul>   
+                <span class="settingName">Saved Folders:</span>
+                <ul id="folderList"></ul>   
             </div>        
         </div>
     </form>
