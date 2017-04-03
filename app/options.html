@@ -2,41 +2,184 @@
 
 <head>
     <title> Fukurou - Options</title>
-    <link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css">
-    <link rel="stylesheet" type="text/css" href="css/optionsStyle.css">
-    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="css/jquery-ui.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/optionsStyle.css" />
 
 </head>
 
 <body>
-    <div id="header">Fukurou Extension Options</div>
 
-    <form id="settingsform">
-        <div class="settings">
-            <span class="settingName">Twitch.TV Username:</span>
-            <input type="text" id="username">
-
-
-            <div id="redirectEH" class="setting">
-                <span class="fieldname">Redirect from EHentai:</span>
-                <input type="checkbox" id="redirectEHswitch" name="some-switch">
-                <label for="redirectEHswitch"></label>
+    <div id="header">
+        <div class="container">
+            <div class="row vcenter">
+                <div class="col-md-2">
+                    <img src="img/icon-512.png">
+                </div>
+                <div class="col-md-8 title">
+                    FUKUROU EXTENSION
+                </div>
             </div>
-
-            <div id="savedFolders">
-                <span class="settingName">Saved Folders:</span>
-                <ul id="folderList"></ul>   
-            </div>        
         </div>
-    </form>
-
-    <div id="footer">
-        <button id="saveButton">Save</button>
-        <span id="indicator">Options Saved</span>
     </div>
+
+    <div id="page">
+        <div class="page-container">
+            <div class="container-fluid">
+                <div class="container-fluid" id="main-region">
+                    <ul class="nav nav-tabs nav-justified settings-tabs">
+                        <li role="presentation" class="active"><a href="#Settings">Settings</a></li>
+                        <li role="presentation"><a href="#Favorites">Favorites</a></li>
+                        <li role="presentation"><a href="#History">History</a></li>
+                    </ul>
+
+                    <div class="row settings-controls">
+                        <div class="col-sm-3 col-sm-offset-10 col-md-3 col-md-offset-11">
+                            <button class="btn btn-primary" id="saveSettings">Save</button>
+                        </div>
+                    </div>
+
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="Settings">
+                            <div>
+                                <div class="form-horizontal">
+                                    <div id="Web">
+                                        <div>
+                                            <fieldset>
+                                                <legend>Web</legend>
+
+                                                <div class="vcenter settingGroup">
+                                                    <label class="col-sm-2 control-label">Redirect EH</label>
+                                                    <div class="col-sm-10">
+                                                        <div class="inputGroup">
+                                                            <input class="toggle" type="checkbox" id="redirectEH">
+                                                            <label class="toggleLabel" for="redirectEH"></label>
+                                                            <span class="help-inline" title="" data-toggle="tooltip" data-original-title="Automatically redirect certain subpages from e-hentai to exhentai"><i class="fa fa-question-circle fa-lg"></i></span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="subGroup on-redirectEH">
+                                                    <div class="vcenter settingGroup">
+                                                        <label class="col-sm-2 control-label">Galleries</label>
+                                                        <div class="col-sm-10">
+                                                            <div class="inputGroup">
+                                                                <input class="toggle" type="checkbox" id="redirectEH-g">
+                                                                <label class="toggleLabel" for="redirectEH-g"></label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="subGroup on-redirectEH">
+                                                    <div class="vcenter settingGroup">
+                                                        <label class="col-sm-2 control-label">Images</label>
+                                                        <div class="col-sm-10">
+                                                            <div class="inputGroup">
+                                                                <input class="toggle" type="checkbox" id="redirectEH-i">
+                                                                <label class="toggleLabel" for="redirectEH-i"></label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="subGroup on-redirectEH">
+                                                    <div class="vcenter settingGroup">
+                                                        <label class="col-sm-2 control-label">Settings</label>
+                                                        <div class="col-sm-10">
+                                                            <div class="inputGroup">
+                                                                <input class="toggle" type="checkbox" id="redirectEH-s">
+                                                                <label class="toggleLabel" for="redirectEH-s"></label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="subGroup on-redirectEH">
+                                                    <div class="vcenter settingGroup">
+                                                        <label class="col-sm-2 control-label">Torrents</label>
+                                                        <div class="col-sm-10">
+                                                            <div class="inputGroup">
+                                                                <input class="toggle" type="checkbox" id="redirectEH-t">
+                                                                <label class="toggleLabel" for="redirectEH-t"></label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="subGroup on-redirectEH">
+                                                    <div class="vcenter settingGroup">
+                                                        <label class="col-sm-2 control-label">Favorites</label>
+                                                        <div class="col-sm-10">
+                                                            <div class="inputGroup">
+                                                                <input class="toggle" type="checkbox" id="redirectEH-f">
+                                                                <label class="toggleLabel" for="redirectEH-f"></label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="subGroup on-redirectEH">
+                                                    <div class="vcenter settingGroup">
+                                                        <label class="col-sm-2 control-label">My Galleries</label>
+                                                        <div class="col-sm-10">
+                                                            <div class="inputGroup">
+                                                                <input class="toggle" type="checkbox" id="redirectEH-my">
+                                                                <label class="toggleLabel" for="redirectEH-my"></label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </fieldset>
+                                        </div>
+                                    </div>
+
+                                    <div id="Stream">
+                                        <div>
+                                            <fieldset>
+                                                <legend>Streaming</legend>
+                                                <div class="vcenter settingGroup">
+                                                    <label class="col-sm-2 control-label">Twitch.TV Username</label>
+                                                    <div class="col-sm-4">
+                                                        <input type="text" id ="twitch-username" name="twitch-username" class="form-control">
+                                                    </div>
+                                                </div>
+                                            </fieldset>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="Favorites">
+                            <div>
+                                <div class="form-horizontal">
+                                    <div id="Web">
+                                        <div>
+                                            <fieldset>
+                                                <legend>Folders</legend>
+                                                <div class="settingGroup">
+                                                    <ul id="folderList"></ul>
+                                                </div>
+                                            </fieldset>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="History">
+                            <h3>We applied clearfix to the tab-content to rid of the gap between the tab and the content</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>   
 
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
     <script src="js/options.js"></script>
 
 </body>

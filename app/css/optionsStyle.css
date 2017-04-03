@@ -1,58 +1,74 @@
 body {
     font-family: 'Verdana';
+    margin: 8px;
+    background-color: #272727;
+}
+
+div {
+    display: block;
 }
 
 #header {
-    font-size: 28px;
+    max-width: 1210px;
+    display: block;
+    margin: 10px auto 10px auto;
+    background-clip: padding-box;
 }
 
-.settings {
-    margin: 4px 4px 0 4px;
-    border: 1px solid #8c8c8c;
-    padding: 10px 10px 10px 10px;
-    display: inline-block;
-    font-weight: bold;
+.vcenter {
+    display: flex;
+    align-items: center;
 }
 
-#username {
-    margin-left: 40px;
+#header img {
+	margin: 10px;
+    height: 128px;
+    width: 128px;
 }
 
-#footer {
-    margin: 10px 0 0 20px;
+#header .title {
+    text-align: center;
+    font-size: 40px;
+    color: white;
 }
 
-#saveButton {
-    font-size: 16px;
-    font-weight: bold;
+#page {
+    display: block;
+    margin: auto;
+    max-width: 1210px;
+    box-shadow: 0 0 10px 1px #aaaaaa;
+    background-color: #ffffff;
+    color: #444444;
+    background-clip: padding-box;
+    padding: 20px 0;
 }
 
-#indicator {
-    font-size: 15px;
-    margin-left: 10px;
-    color: #0040ff;
-    opacity: 0;
-    transition:opacity 1s linear;
+fieldset {
+    margin-bottom: 20px;
 }
 
-
-
-
-
-
-
-.setting {
+.settings-controls {
     margin-top: 10px;
 }
 
-.fieldname {
-    margin-right: 30px;
+.settingGroup {
+    
 }
 
-#redirectEH input {
+.subGroup {
+    padding-left: 25px;
+}
+
+.inputGroup {
+    display: flex;
+    align-items: center;
+}
+
+.toggle {
     display: none;
 }
-#redirectEH label {
+
+.toggleLabel {
     cursor: pointer;
     display: inline-block;
     border: 1px solid #999;
@@ -62,8 +78,10 @@ body {
     height: 20px;
     position: relative;
     transition: all 0.2s;
+    margin: 0px;
 }
-label:after {
+
+.toggleLabel:after {
     content: '';
     background-color: #FFF;
     border: 1px solid #999;
@@ -75,52 +93,56 @@ label:after {
     left: 0;
     transition: all 0.2s;
 }
-#redirectEH input:checked + label {
+
+.toggle:checked + label {
     background-color: #3eafe9;
     border-color: #3eafe9;
 }
-#redirectEH input:checked + label:after {
+
+.toggle:checked + label:after {
     left: 20px;
     border-color: #3eafe9;
 }
 
-
-
-
-
-
-
-
-#savedFolders {
-    margin-top: 10px;
-    display: block;
+.help-inline {
+    margin-left: 10px;
+    display: inline;
 }
 
-#savedFolders .settingName {
-    display: inline-block;
-    float: left;
+.tooltip-inner {
+    max-width: 250px;
+}
+
+.on-redirectEH {
+    display: none;
 }
 
 #folderList {
     display: inline-block;
-    float: right;
     list-style-type: none;
     margin: 0;
     padding: 0;
     width: 80%;
 }
 
-#folderList li {
+.item {
     margin: 0 3px 3px 3px;
     padding: 0.4em;
     padding-left: 1.5em;
     font-size: 1.4em;
-    height: 18px;
     cursor: move;
     min-width: 380px;
+    max-width: 700px;
 }
 
-#folderList li.fixed {
+.item div {
+    width: auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.item .fixed {
     cursor: default;
     color: #959595;
     opacity: 0.5;
@@ -132,5 +154,8 @@ label:after {
 }
 
 .fa-trash {
+    padding-left: 5px;
+    margin-left: auto;
+    margin-right: 0;
     cursor: pointer;
 }

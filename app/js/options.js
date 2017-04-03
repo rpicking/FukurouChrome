@@ -2,22 +2,22 @@
 (function () {
     //"use strict";
 
-    var usernameInput;
     var save;
 
     function saveSettings() {
         var indicator = document.getElementById("indicator");
-        indicator.style.opacity = 1;
+        //indicator.style.opacity = 1;
 
         // username
-        var username = usernameInput.value;
+        var twitchnameInput = document.getElementById("twitch-username");
+        var username = twitchnameInput.value;
         if (username != localStorage.username) {
             localStorage.username = username;
             chrome.extension.getBackgroundPage().start();
         }
 
         // redirect EHentai
-        var redirectEH = document.getElementById("redirectEHswitch").checked;
+        var redirectEH = document.getElementById("redirectEH").checked;
         chrome.storage.local.get('redirectEH', function (item) {
             if (redirectEH != item.redirectEH) {
                 chrome.storage.local.set({ 'redirectEH': redirectEH });
@@ -68,29 +68,30 @@
 
 
         setTimeout(function () {
-            indicator.style.opacity = 0;
+            //indicator.style.opacity = 0;
         }, 4000);
     }
 
     function start() {
         // twitch.tv username
         var username = localStorage.username;
-        usernameInput = document.getElementById("username");
+        var twitchnameInput = document.getElementById("twitch-username");
 
+        console.log()
         if (username) {
-            usernameInput.value = username;
+            twitchnameInput.value = username;
         }
 
         // redirect from ehentai
         chrome.storage.local.get('redirectEH', function (item) {
             console.log(item.redirectEH);
-            if (item.redirectEH != undefined) {
-                document.getElementById("redirectEHswitch").checked = item.redirectEH;
+            if (item.redirectEH) {
+                document.getElementById("redirectEH").click();
             }
         });
         
         // setup save button
-        save = document.getElementById("saveButton");
+        save = document.getElementById("saveSettings");
         save.onclick = saveSettings;
 
         // populate list with folders
@@ -110,6 +111,15 @@ $("#folderList").sortable({
     cancel: ".fixed",
     axis: 'y'
 });
+
+// activate tabs
+$('#main-region a').click(function (e) {
+    e.preventDefault()
+    $(this).tab('show')
+})
+
+// activate tooltips
+$('span').tooltip();
 
 // As you are using jQuery 1.6 'live' allows you to bind events to elements that do not exist yet
 $('body').on('click', '.delete', function () {
@@ -136,6 +146,27 @@ $('body').on('dblclick', '.item', function () {
     editItem(this);
 });
 
+document.getElementById("redirectEH").addEventListener("click", function () {
+    toggleSub(this, 'on-redirectEH');
+});
+
+
+function toggleSub(evt, subToggle) {
+    var x = document.getElementsByClassName(subToggle);
+    $('.' + subToggle).each(function () {
+        if ($(this).css("display") === 'none') {
+            $(this).css('display', 'block');
+        } else {
+            $(this).css('display', 'none');
+        }
+    });
+
+    $('.' + subToggle).each(function () {
+        $(this).find('.toggle').each(function () {
+            $(this).prop('checked', false);
+        });
+    });
+}
 
 function sendMessage(payload) {
     console.log(payload);
@@ -174,21 +205,21 @@ function addElement(name, uid, position) {
     position = position || listItems.length + 1;    // position defaults to end of list
 
     li.id = "item-" + uid;
-    li.className = "ui-state-default item";
+    li.className = "ui-state-default vcenter item";
 
     var arrow = document.createElement("span");
     arrow.className = "arrow fa fa-arrows-v fa-fw";
     arrow.setAttribute("aria-hidden", true);
     li.appendChild(arrow);
 
-    var trash = document.createElement("span");
-    trash.className = "delete fa fa-trash fa-fw pull-right";
-    trash.setAttribute("aria-hidden", true);
-    li.appendChild(trash);
-
     var itemText = document.createElement("div");
     li.appendChild(itemText);
     itemText.appendChild(document.createTextNode(name));
+
+    var trash = document.createElement("span");
+    trash.className = "delete fa fa-trash fa-fw";
+    trash.setAttribute("aria-hidden", true);
+    li.appendChild(trash);
 
     if (position >= listItems.length) {
         list.append(li);
