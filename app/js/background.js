@@ -81,9 +81,11 @@ function sendMessage(payload) {
 
             case 'edit':    // --- EDIT ---
                 if (response.type === "success") {
+                    status = "";
                     sendMessage({ 'task': 'sync' });
                 }
                 else {
+                    status = "failure";
                     console.log('edit failure');
                     console.log(response);
                 }
@@ -519,6 +521,7 @@ function init() {
 var notificationId = null;
 var notificationUrl = null;
 var folders = [];
+var status = "";
 
 var content = new Content();
 var activeMenus = [];

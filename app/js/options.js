@@ -5,8 +5,9 @@
     var save;
 
     function saveSettings() {
-        var indicator = document.getElementById("indicator");
-        //indicator.style.opacity = 1;
+        var indicator = document.getElementById("saveSettings").getElementsByTagName("span")[0];
+        indicator.classList.add("glyphicon", "glyphicon-refresh", "spinning");
+
 
         // twitch username
         var twitchnameInput = document.getElementById("twitch-username");
@@ -99,6 +100,13 @@
             }
         }
         if (edit_folders.length === 0) {
+            setTimeout(function () {
+                indicator.classList.remove("spinning", "glyphicon-refresh");
+                indicator.classList.add("glyphicon-ok");
+                setTimeout(function () {
+                    indicator.classList.remove("glyphicon-ok", "glyphicon");
+                }, 4000);
+            }, 1000);
             return
         }
 
@@ -107,11 +115,8 @@
             "folders": JSON.stringify(edit_folders)
         };
         sendMessage(payload);
-
-
-        setTimeout(function () {
-            //indicator.style.opacity = 0;
-        }, 4000);
+        
+        checkStatus("edit");
     }
 
     // loads settings onto page
@@ -232,6 +237,37 @@ function toggleSub(evt, subToggle) {
             $(this).prop('checked', false);
         });
     });
+}
+
+function checkStatus(payload) {
+    chrome.extension.getBackgroundPage().status = payload;
+    statusLoop();
+}
+
+function statusLoop() {
+    var status = chrome.extension.getBackgroundPage().status;
+    if (status === "") {
+        var indicator = document.getElementById("saveSettings").getElementsByTagName("span")[0];
+        indicator.classList.remove("spinning", "glyphicon-refresh");
+        indicator.classList.add("glyphicon-ok");
+        setTimeout(function () {
+            indicator.classList.remove("glyphicon-ok", "glyphicon");
+        }, 4000);
+        return;
+    }
+    else if(status === "failure") {
+        chrome.extension.getBackgroundPage().status = "";
+        var indicator = document.getElementById("saveSettings").getElementsByTagName("span")[0];
+        indicator.classList.remove("spinning", "glyphicon-refresh");
+        indicator.classList.add("glyphicon-remove");
+        setTimeout(function () {
+            indicator.classList.remove("glyphicon-remove", "glyphicon");
+        }, 3000);
+        return;
+    }
+    setTimeout(function () {
+        statusLoop();
+    }, 1000);
 }
 
 function sendMessage(payload) {
