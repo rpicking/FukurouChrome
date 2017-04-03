@@ -155,18 +155,42 @@ function getMaxImage() {
 function start() {
     var url = document.URL;
     if (url.indexOf("e-hentai.org") > -1) {
-        chrome.storage.local.get('redirectEH', function (item) {
+        chrome.storage.local.get(null, function (item) {
             if (item.redirectEH) {
-                var redirect = [
-                        "e-hentai.org/g/",
-                        "e-hentai.org/s/"
-                ];
+                var redirect = [];
+                // redirect EH Galleries
+                if (item.redirectEH_g) {
+                    redirect.push(["e-hentai.org/g/", ""]);
+                }
+                // redirect EH Images
+                if (item.redirectEH_i) {
+                    redirect.push(["e-hentai.org/s/", ""]);
+                }
+                // redirect EH Settings
+                if (item.redirectEH_s) {
+                    redirect.push(["e-hentai.org/uconfig.php", ""]);
+                }
+                // redirect EH Torrents
+                if (item.redirectEH_t) {
+                    redirect.push(["e-hentai.org/torrents.php", ""]);
+                }
+                // redirect EH Favorites
+                if (item.redirectEH_f) {
+                    redirect.push(["e-hentai.org/favorites.php", ""]);
+                }
+                // redirect EH My Galleries
+                if (item.redirectEH_my) {
+                    redirect.push(["upload.e-hentai.org/manage.php", "https://exhentai.org/upload/manage.php"]);
+                }
 
                 for (var i = 0; i < redirect.length; ++i) {
-                    if (url.indexOf(redirect[i]) > -1) {
-                        url = url.replace("-", 'x');
-                        window.location.href = url;
-                        return;
+                    if (url.indexOf(redirect[i][0]) > -1) {
+                        if (redirect[i][1] === "") {
+                            url = url.replace("-", 'x');
+                            window.location.href = url;
+                            return;
+                        }
+                        window.location.href = redirect[i][1];
                     }
                 }
             }

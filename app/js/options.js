@@ -8,7 +8,7 @@
         var indicator = document.getElementById("indicator");
         //indicator.style.opacity = 1;
 
-        // username
+        // twitch username
         var twitchnameInput = document.getElementById("twitch-username");
         var username = twitchnameInput.value;
         if (username != localStorage.username) {
@@ -23,7 +23,49 @@
                 chrome.storage.local.set({ 'redirectEH': redirectEH });
             }
         });
-        
+        // redirect EH Galleries
+        var redirectEH_g = document.getElementById("redirectEH_g").checked;
+        chrome.storage.local.get('redirectEH_g', function (item) {
+            if (redirectEH_g != item.redirectEH_g) {
+                chrome.storage.local.set({ 'redirectEH_g': redirectEH_g });
+            }
+        });
+        // redirect EH Images
+        var redirectEH_i = document.getElementById("redirectEH_i").checked;
+        chrome.storage.local.get('redirectEH_i', function (item) {
+            if (redirectEH_i != item.redirectEH_i) {
+                chrome.storage.local.set({ 'redirectEH_i': redirectEH_i });
+            }
+        });        
+        // redirect EH Settings
+        var redirectEH_s = document.getElementById("redirectEH_s").checked;
+        chrome.storage.local.get('redirectEH_s', function (item) {
+            if (redirectEH_s != item.redirectEH_s) {
+                chrome.storage.local.set({ 'redirectEH_s': redirectEH_s });
+            }
+        });
+        // redirect EH Torrents
+        var redirectEH_t = document.getElementById("redirectEH_t").checked;
+        chrome.storage.local.get('redirectEH_t', function (item) {
+            if (redirectEH_t != item.redirectEH_t) {
+                chrome.storage.local.set({ 'redirectEH_t': redirectEH_t });
+            }
+        });
+        // redirect EH Favorites
+        var redirectEH_f = document.getElementById("redirectEH_f").checked;
+        chrome.storage.local.get('redirectEH_f', function (item) {
+            if (redirectEH_f != item.redirectEH_f) {
+                chrome.storage.local.set({ 'redirectEH_f': redirectEH_f });
+            }
+        });
+        // redirect EH My Galleries
+        var redirectEH_my = document.getElementById("redirectEH_my").checked;
+        chrome.storage.local.get('redirectEH_my', function (item) {
+            if (redirectEH_my != item.redirectEH_my) {
+                chrome.storage.local.set({ 'redirectEH_my': redirectEH_my });
+            }
+        });
+
         // build name/order change message
         var edit_folders = [];
         var folders = chrome.extension.getBackgroundPage().folders;
@@ -72,6 +114,7 @@
         }, 4000);
     }
 
+    // loads settings onto page
     function start() {
         // twitch.tv username
         var username = localStorage.username;
@@ -82,11 +125,34 @@
             twitchnameInput.value = username;
         }
 
-        // redirect from ehentai
-        chrome.storage.local.get('redirectEH', function (item) {
-            console.log(item.redirectEH);
+        // redirect from EH
+        chrome.storage.local.get(null, function (item) {
             if (item.redirectEH) {
-                document.getElementById("redirectEH").click();
+                document.getElementById('redirectEH').click();
+                // redirect EH Galleries
+                if (item.redirectEH_g) {
+                    document.getElementById('redirectEH_g').click();
+                }
+                // redirect EH Images
+                if (item.redirectEH_i) {
+                    document.getElementById('redirectEH_i').click();
+                }
+                // redirect EH Settings
+                if (item.redirectEH_s) {
+                    document.getElementById('redirectEH_s').click();
+                }
+                // redirect EH Torrents
+                if (item.redirectEH_t) {
+                    document.getElementById('redirectEH_t').click();
+                }
+                // redirect EH Favorites
+                if (item.redirectEH_f) {
+                    document.getElementById('redirectEH_f').click();
+                }
+                // redirect EH My Galleries
+                if (item.redirectEH_my) {
+                    document.getElementById('redirectEH_my').click();
+                }
             }
         });
         
