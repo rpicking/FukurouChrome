@@ -38,7 +38,7 @@ function sendDownload(payload) {
             cookies.push([sitecookies[i].name, sitecookies[i].value]);
         }
         payload.cookies = cookies;
-        delete payload.domain;
+        delete payload.domain;  // dont need to send domain to host
         sendMessage(payload);
     });
 }
@@ -51,7 +51,6 @@ Response must include task and type keys
     type = success, failure, or crash
 */    
 function sendMessage(payload) {
-    console.log(payload);
     chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', payload, function (response) {
         switch (response.task) {
             case 'sync':    // --- SYNC ---

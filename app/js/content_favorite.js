@@ -44,6 +44,7 @@ function parseEhentai(srcUrl, pageUrl, folder, apiUrl) {
     var id = [splitlink[4], splitlink[5]];;
     var gdata = { "method": "gdata", "gidlist": [id], "namespace": 1 };
     send_req(apiUrl, gdata).then(function (response) {
+        console.log(response);
         comicName = response.gmetadata[0].title;
         len = response.gmetadata[0].tags.length;
         for (var i = 0; i < len; ++i) {
@@ -58,15 +59,18 @@ function parseEhentai(srcUrl, pageUrl, folder, apiUrl) {
 
 
 function parseTumblr(info, folder) {
-    if (info.hasOwnProperty("frameUrl")) {
+    if (info.hasOwnProperty("linkUrl")) {
+        send_message(info.linkUrl, info.pageUrl, folder);
+        return;
+    } else if (info.hasOwnProperty("frameUrl")) {
         $.get(info.frameUrl).then(html => {
             var srcUrl = $(html).find('source').attr('src');
             send_message(srcUrl, info.pageUrl, folder);
         });
+        return;
     }
-    else {
-        send_message(info.srcUrl, info.pageUrl, folder);
-    }
+    // default
+    send_message(info.srcUrl, info.pageUrl, folder);
 }
 
 
@@ -157,7 +161,7 @@ function start() {
     if (url.indexOf("e-hentai.org") > -1) {
         chrome.storage.local.get(null, function (item) {
             if (item.redirectEH) {
-                var redirect = [];
+                var redirect = [];  // array containing redirect url patterns
                 // redirect EH Galleries
                 if (item.redirectEH_g) {
                     redirect.push(["e-hentai.org/g/", ""]);
@@ -187,10 +191,21 @@ function start() {
                     if (url.indexOf(redirect[i][0]) > -1) {
                         if (redirect[i][1] === "") {
                             url = url.replace("-", 'x');
-                            window.location.href = url;
-                            return;
+                        } else {
+                            url = redirect[i][1];
                         }
-                        window.location.href = redirect[i][1];
+                        
+                        console.log("START");
+                        var count = 5;
+                        var countdown = setInterval(function () {
+                            count--;
+                            if (count < 0) {
+                                window.location.href = url;
+                            } else {
+                                console.log('wait here for ' + count + ' more seconds');
+                            }
+                        }, 1000);
+                        break;
                     }
                 }
             }
