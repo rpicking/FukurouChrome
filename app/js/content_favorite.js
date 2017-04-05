@@ -60,7 +60,11 @@ function parseEhentai(srcUrl, pageUrl, folder, apiUrl) {
 
 function parseTumblr(info, folder) {
     if (info.hasOwnProperty("linkUrl")) {
-        send_message(info.linkUrl, info.pageUrl, folder);
+        var srcUrl = info.srcUrl;
+        if (info.hasOwnProperty("frameUrl")) {
+            srcUrl = info.linkUrl;
+        }
+        send_message(srcUrl, info.pageUrl, folder);
         return;
     } else if (info.hasOwnProperty("frameUrl")) {
         $.get(info.frameUrl).then(html => {

@@ -159,6 +159,7 @@ function createMenu(folder) {
         title: "Add to: " + folder,
         contexts: ["all"],
         onclick: function (info) {
+            console.log(info);
             if (info.mediaType == undefined) {
                 console.log('not media');
             }
