@@ -12,6 +12,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             sendDownload(request);
             break;
         default:
+            console.log(request);
             sendMessage(request);
             break;
     }
@@ -43,6 +44,20 @@ function sendDownload(payload) {
     });
 }
 
+function connectPort() {
+    port = chrome.runtime.connectNative('vangard.fukurou.ext.msg');
+    port.onDisconnect.addListener(function () {
+        port = null;
+        //port = chrome.runtime.connectNative('vangard.fukurou.ext.msg');
+    });
+    //port.onMessage.addListener(sendMessage);
+    port.onMessage.addListener(function (msg) {
+        console.log("message received");
+        console.log(msg);
+        receiveMessage(msg);
+    });
+}
+
 /*
 Sends message to host with payload
 Sent messages must have task key
@@ -50,108 +65,118 @@ Response must include task and type keys
     task = task of original message
     type = success, failure, or crash
 */    
-function sendMessage(payload) {
-    chrome.runtime.sendNativeMessage('vangard.fukurou.ext.msg', payload, function (response) {
-        switch (response.task) {
-            case 'sync':    // --- SYNC ---
-                localStorage.folders = JSON.stringify(response.folders);
+function receiveMessage(response) {
+    switch (response.task) {
+        case 'sync':    // --- SYNC ---
+            localStorage.folders = JSON.stringify(response.folders);
 
-                //clean "old" menus
-                folders = [];
-                var menuLength = activeMenus.length;
-                for (var i = 0; i < menuLength; ++i) {
-                    chrome.contextMenus.remove(activeMenus[i]);
-                }
+            //clean "old" menus
+            folders = [];
+            var menuLength = activeMenus.length;
+            for (var i = 0; i < menuLength; ++i) {
+                chrome.contextMenus.remove(activeMenus[i]);
+            }
 
-                activeMenus = [];
-                // Order created is order appears in context menu
-                for (var item in response.folders) {
-                    var tmp = response.folders[item];
-                    tmp['name'] = item;
-                    folders.push(tmp);
-                }
-                folders.sort(function (a, b) {
-                    return a.order > b.order;
-                });
-                for (var i = 0; i < folders.length; ++i) {
-                    createMenu(folders[i].name);
-                }
-                break;
+            activeMenus = [];
+            // Order created is order appears in context menu
+            for (var item in response.folders) {
+                var tmp = response.folders[item];
+                tmp['name'] = item;
+                folders.push(tmp);
+            }
+            folders.sort(function (a, b) {
+                return a.order > b.order;
+            });
+            for (var i = 0; i < folders.length; ++i) {
+                createMenu(folders[i].name);
+            }
+            break;
 
-            case 'edit':    // --- EDIT ---
-                if (response.type === "success") {
-                    status = "";
-                    sendMessage({ 'task': 'sync' });
-                }
-                else {
-                    status = "failure";
-                    console.log('edit failure');
-                    console.log(response);
-                }
-                break;
-
-            case 'delete':  // --- DELETE ---
-                var opt = {
-                    type: "basic",
-                    title: "Fukurou Downloader",
-                    message: "",
-                    iconUrl: "img/icon-512.png",
-                }
-
-                if (response.type === "success") {
-                    sendMessage({ 'task': 'sync' });
-
-                    opt.message = 'Successfully deleted folder "' + response.name + '" with uid: ' + response.uid;
-                    opt.isClickable = false;
-                    chrome.notifications.create(opt);
-                    var audio = new Audio('audio/success-chime.mp3');
-                    audio.play();
-                }
-                else {
-                    opt.message = "Failed to delete folder";
-                    chrome.notifications.create(opt);
-                    var audio = new Audio('audio/error-chime.wav');
-                    audio.play();
-                    console.log('delete failure');
-                    console.log(response);
-                }
-                break;
-
-            case 'save':    // --- SAVE ---
-                var opt = {
-                    type: "basic",
-                    title: "Fukurou Downloader",
-                    message: "",
-                    iconUrl: "img/icon-512.png",
-                }
-
-                if (response.type === 'success') {
-                    notificationUrl = response.pageUrl;
-
-                    opt.message = response.filename + " added to " + response.folder;
-                    opt.isClickable = true;
-                    chrome.notifications.create(opt, function (id) {
-                        notificationId = id;
-                    });
-                    var audio = new Audio('audio/success-chime.mp3');
-                    audio.play();
-                }
-                else {  // download failed
-                    opt.message = "File failed to download. Reason: " + response.type;
-                    chrome.notifications.create(opt);
-                    var audio = new Audio('audio/error-chime.wav');
-                    audio.play();
-                }
-                break;
-
-                // --- DEFAULT ---
-            default:
-                console.log('Task not implemented or present')
+        case 'edit':    // --- EDIT ---
+            if (response.type === "success") {
+                status = "";
+                sendMessage({ 'task': 'sync' });
+            }
+            else {
+                status = "failure";
+                console.log('edit failure');
                 console.log(response);
-        }
-    });
+            }
+            break;
+
+        case 'delete':  // --- DELETE ---
+            var opt = {
+                type: "basic",
+                title: "Fukurou Downloader",
+                message: "",
+                iconUrl: "img/icon-512.png",
+            }
+
+            if (response.type === "success") {
+                sendMessage({ 'task': 'sync' });
+
+                opt.message = 'Successfully deleted folder "' + response.name + '" with uid: ' + response.uid;
+                opt.isClickable = false;
+                chrome.notifications.create(opt);
+                var audio = new Audio('audio/success-chime.mp3');
+                audio.play();
+            }
+            else {
+                opt.message = "Failed to delete folder";
+                chrome.notifications.create(opt);
+                var audio = new Audio('audio/error-chime.wav');
+                audio.play();
+                console.log('delete failure');
+                console.log(response);
+            }
+            break;
+
+        case 'save':    // --- SAVE ---
+            var opt = {
+                type: "basic",
+                title: "Fukurou Downloader",
+                message: "",
+                iconUrl: "img/icon-512.png",
+            }
+
+            if (response.type === 'success') {
+                notificationUrl = response.pageUrl;
+
+                opt.message = response.filename + " added to " + response.folder;
+                opt.isClickable = true;
+                chrome.notifications.create(opt, function (id) {
+                    notificationId = id;
+                });
+                var audio = new Audio('audio/success-chime.mp3');
+                audio.play();
+            }
+            else {  // download failed
+                opt.message = "File failed to download. Reason: " + response.type;
+                chrome.notifications.create(opt);
+                var audio = new Audio('audio/error-chime.wav');
+                audio.play();
+            }
+            break;
+        case 'resend':  // --- RESEND ---
+            response.task = response.type
+            delete response.type
+            sendMessage(response);
+            break;
+            // --- DEFAULT ---
+        default:
+            console.log('Task not implemented or present')
+            console.log(response);
+    }
 }
 
+function sendMessage(payload) {
+    if (port == null) {
+        console.log("resetting port");
+        connectPort()
+    }
+    console.log("post");
+    port.postMessage(payload);
+}
 
 // creates menu item
 function createMenu(folder) {
@@ -159,7 +184,7 @@ function createMenu(folder) {
         title: "Add to: " + folder,
         contexts: ["all"],
         onclick: function (info) {
-            console.log(info);
+            //console.log(info);
             if (info.mediaType == undefined) {
                 console.log('not media');
             }
@@ -174,7 +199,8 @@ function createMenu(folder) {
 function processDownload(info, folder) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         chrome.tabs.sendMessage(tabs[0].id, { "info": info, "folder": folder }, function (response) {
-            // reponse processing goes here
+            console.log("processDownload response");
+            console.log(response);
         });
     });
 }
@@ -192,6 +218,7 @@ function extractDomain(url) {
     }
     return url;
 }
+
 
 // -----------------------------------------------------------------
 // --------------------- TWITCH.TV ---------------------------------
@@ -511,6 +538,8 @@ function uploadWindow(window) {
 function init() {
     chrome.browserAction.setBadgeBackgroundColor({ color: [14, 45, 199, 255] });
     chrome.browserAction.setBadgeText({ text: "0" });
+
+    connectPort()
     sendMessage({ 'task': 'sync' });
 }
 
@@ -522,10 +551,12 @@ var notificationId = null;
 var notificationUrl = null;
 var folders = [];
 var status = "";
-
+var port = null;
 var content = new Content();
 var activeMenus = [];
-var headers = { method: 'GET', headers: { 'Client-ID': 'b71k7vce5w1szw9joc08sdo4r19wqb1' } }
+var headers = { 'method': 'GET', 'headers': { 'Client-ID': 'b71k7vce5w1szw9joc08sdo4r19wqb1' } };
+
 init();
 start();
+
 setInterval(start, 60000);

@@ -204,6 +204,7 @@ function start() {
                         var countdown = setInterval(function () {
                             count--;
                             if (count < 0) {
+                                clearInterval(countdown);
                                 window.location.href = url;
                             } else {
                                 console.log('wait here for ' + count + ' more seconds');

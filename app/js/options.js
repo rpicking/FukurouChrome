@@ -121,6 +121,15 @@
 
     // loads settings onto page
     function start() {
+        // host check
+        var hostStatus = document.getElementById("hostStatus");
+        if (chrome.extension.getBackgroundPage().port === null) {
+            hostStatus.classList.add("glyphicon", "glyphicon-remove");
+        }
+        else {
+            hostStatus.classList.add("glyphicon", "glyphicon-ok");
+        }
+
         // twitch.tv username
         var username = localStorage.username;
         var twitchnameInput = document.getElementById("twitch-username");
@@ -160,6 +169,7 @@
                 }
             }
         });
+
         
         // setup save button
         save = document.getElementById("saveSettings");
