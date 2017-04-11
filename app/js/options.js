@@ -134,7 +134,6 @@
         var username = localStorage.username;
         var twitchnameInput = document.getElementById("twitch-username");
 
-        console.log()
         if (username) {
             twitchnameInput.value = username;
         }

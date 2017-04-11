@@ -53,28 +53,46 @@ function parseEhentai(srcUrl, pageUrl, folder, apiUrl) {
                 artist = artist.substring(artist.indexOf(":") + 1); // remove artist: from tag
             }
         }
-        send_message(srcUrl, pageUrl, folder, comicLink, comicName, comicPage, artist);
+        payload = {
+            "srcUrl": srcUrl,
+            "pageUrl": pageUrl,
+            "comicLink": comicLink,
+            "comicName": comicName,
+            "artist": artist,
+            "folder": folder
+        }
+        send_message(payload);
     });
 }
 
 
 function parseTumblr(info, folder) {
+    var payload = {};
     if (info.hasOwnProperty("linkUrl")) {
         var srcUrl = info.srcUrl;
         if (info.hasOwnProperty("frameUrl")) {
             srcUrl = info.linkUrl;
         }
-        send_message(srcUrl, info.pageUrl, folder);
+        payload["srcUrl"] = srcUrl;
+        payload["pageUrl"] = info.pageUrl;
+        payload["folder"] = folder;
+        send_message(payload);
         return;
     } else if (info.hasOwnProperty("frameUrl")) {
         $.get(info.frameUrl).then(html => {
             var srcUrl = $(html).find('source').attr('src');
-            send_message(srcUrl, info.pageUrl, folder);
+            payload["srcUrl"] = srcUrl;
+            payload["pageUrl"] = info.pageUrl;
+            payload["folder"] = folder;
+            send_message(payload);
         });
         return;
     }
     // default
-    send_message(info.srcUrl, info.pageUrl, folder);
+    payload["srcUrl"] = info.srcUrl;
+    payload["pageUrl"] = info.pageUrl;
+    payload["folder"] = folder;
+    send_message(payload);
 }
 
 
@@ -93,19 +111,12 @@ function send_req(apiUrl, data) {
 }
 
 // Sends required info back to background for passing to host
-function send_message(srcUrl, pageUrl, folder, comicLink, comicName, comicPage, artist) {
-    var domain = extractDomain(pageUrl);
-    chrome.runtime.sendMessage({
-            "task": "save",
-            "srcUrl": srcUrl,
-            "pageUrl": pageUrl,
-            "domain": domain,
-            "folder": folder,
-            "comicLink": comicLink,
-            "comicName": comicName,
-            "comicPage": comicPage,
-            "artist": artist,
-        }, function (response) { });
+function send_message(payload) {
+    var domain = extractDomain(payload.pageUrl);
+    payload['domain'] = domain;
+    payload['task'] = 'save';
+    console.log(payload);
+    chrome.runtime.sendMessage(payload, function (response) { });
 }
 
 // returns domain name from url
@@ -122,6 +133,7 @@ function extractDomain(url) {
     return url;
 }
 
+// messages from Background
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
         sendResponse({ "status": "Received" });
@@ -135,8 +147,21 @@ chrome.runtime.onMessage.addListener(
         else if (request.info.pageUrl.indexOf("tumblr.com") > -1) {
             parseTumblr(request.info, request.folder);
         }
+        else if (request.info.pageUrl.indexOf("pixiv.net") > -1) {
+            var payload = {
+                "srcUrl": request.info.srcUrl,
+                "pageUrl": request.info.pageUrl,
+                "folder": request.folder,
+                "headers": {"Referer": request.info.pageUrl}
+            };
+            send_message(payload);
+        }
         else {  // no custom processing
-            send_message(request.info.srcUrl, request.info.pageUrl, request.folder);
+            var payload = {};
+            payload["srcUrl"] = request.info.srcUrl;
+            payload["pageUrl"] = request.info.pageUrl;
+            payload["folder"] = request.folder;
+            send_message(payload);
         }
     });
 

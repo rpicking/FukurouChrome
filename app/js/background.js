@@ -7,12 +7,12 @@ chrome.notifications.onClicked.addListener(function (id) {
 
 // listen for messages from other scripts
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    console.log(request);
     switch (request.task) {
         case "save":
             sendDownload(request);
             break;
         default:
-            console.log(request);
             sendMessage(request);
             break;
     }
@@ -48,12 +48,8 @@ function connectPort() {
     port = chrome.runtime.connectNative('vangard.fukurou.ext.msg');
     port.onDisconnect.addListener(function () {
         port = null;
-        //port = chrome.runtime.connectNative('vangard.fukurou.ext.msg');
     });
-    //port.onMessage.addListener(sendMessage);
     port.onMessage.addListener(function (msg) {
-        console.log("message received");
-        console.log(msg);
         receiveMessage(msg);
     });
 }
@@ -171,10 +167,8 @@ function receiveMessage(response) {
 
 function sendMessage(payload) {
     if (port == null) {
-        console.log("resetting port");
         connectPort()
     }
-    console.log("post");
     port.postMessage(payload);
 }
 
@@ -199,8 +193,8 @@ function createMenu(folder) {
 function processDownload(info, folder) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
         chrome.tabs.sendMessage(tabs[0].id, { "info": info, "folder": folder }, function (response) {
-            console.log("processDownload response");
-            console.log(response);
+            // do nothing because have specific method for catching all message to background
+
         });
     });
 }
