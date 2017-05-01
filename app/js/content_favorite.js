@@ -44,7 +44,7 @@ function parseEhentai(srcUrl, pageUrl, folder, apiUrl) {
     var id = [splitlink[4], splitlink[5]];;
     var gdata = { "method": "gdata", "gidlist": [id], "namespace": 1 };
     send_req(apiUrl, gdata).then(function (response) {
-        console.log(response);
+        //console.log(response);
         comicName = response.gmetadata[0].title;
         len = response.gmetadata[0].tags.length;
         for (var i = 0; i < len; ++i) {
@@ -67,20 +67,25 @@ function parseEhentai(srcUrl, pageUrl, folder, apiUrl) {
 
 
 function parseTumblr(info, folder) {
+    //console.log(info);
     var payload = {};
+    var srcUrl = info.srcUrl;
+
     if (info.hasOwnProperty("linkUrl")) {
-        var srcUrl = info.srcUrl;
-        if (info.hasOwnProperty("frameUrl")) {
-            srcUrl = info.linkUrl;
-        }
-        payload["srcUrl"] = srcUrl;
-        payload["pageUrl"] = info.pageUrl;
-        payload["folder"] = folder;
-        send_message(payload);
+        isfile(info.linkUrl).then(function (file) {
+            if (file) {
+                srcUrl = info.linkUrl;
+            }
+
+            payload["srcUrl"] = srcUrl;
+            payload["pageUrl"] = info.pageUrl;
+            payload["folder"] = folder;
+            send_message(payload);
+        });
         return;
     } else if (info.hasOwnProperty("frameUrl")) {
         $.get(info.frameUrl).then(html => {
-            var srcUrl = $(html).find('source').attr('src');
+            srcUrl = $(html).find('source').attr('src');
             payload["srcUrl"] = srcUrl;
             payload["pageUrl"] = info.pageUrl;
             payload["folder"] = folder;
@@ -89,10 +94,27 @@ function parseTumblr(info, folder) {
         return;
     }
     // default
-    payload["srcUrl"] = info.srcUrl;
+    payload["srcUrl"] = srcUrl;
     payload["pageUrl"] = info.pageUrl;
     payload["folder"] = folder;
     send_message(payload);
+}
+
+// returns true if url leads to a file
+function isfile(url) {
+    return new Promise(function (resolve, reject) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open('HEAD', url);
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == this.DONE) {
+                if (this.getResponseHeader("Content-Type").indexOf("text/html") > -1) {
+                    resolve(false);
+                }
+                resolve(true);
+            }
+        };
+        xhttp.send();
+    });
 }
 
 
@@ -115,7 +137,7 @@ function send_message(payload) {
     var domain = extractDomain(payload.pageUrl);
     payload['domain'] = domain;
     payload['task'] = 'save';
-    console.log(payload);
+    //console.log(payload);
     chrome.runtime.sendMessage(payload, function (response) { });
 }
 

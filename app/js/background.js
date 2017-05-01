@@ -7,7 +7,7 @@ chrome.notifications.onClicked.addListener(function (id) {
 
 // listen for messages from other scripts
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    console.log(request);
+    //console.log(request);
     switch (request.task) {
         case "save":
             sendDownload(request);
@@ -62,6 +62,8 @@ Response must include task and type keys
     type = success, failure, or crash
 */    
 function receiveMessage(response) {
+    //console.log("Message Received:");
+    //console.log(response);
     switch (response.task) {
         case 'sync':    // --- SYNC ---
             localStorage.folders = JSON.stringify(response.folders);
