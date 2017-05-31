@@ -76,6 +76,12 @@ function parseTumblr(info, folder) {
             if (file) {
                 srcUrl = info.linkUrl;
             }
+            else {
+                var larger_image = $('a[href="' + info.linkUrl + '"]').attr('data-big-photo');
+                if (larger_image) {
+                    srcUrl = larger_image;
+                }
+            }
 
             payload["srcUrl"] = srcUrl;
             payload["pageUrl"] = info.pageUrl;
@@ -100,6 +106,29 @@ function parseTumblr(info, folder) {
     send_message(payload);
 }
 
+
+function parsePixiv(info, folder) {
+    console.log(info);
+    var payload = {
+        "pageUrl": info.pageUrl,
+        "folder": folder,
+        "headers": { "Referer": info.pageUrl }
+    };
+
+    if (!info.hasOwnProperty("srcUrl")) {
+        if (info.hasOwnProperty("linkUrl")) {   // side menu item
+            var srcUrl = info.linkUrl.substring(info.linkUrl.indexOf("www.pixiv.net") + 13);    // remove domain
+            payload['srcUrl'] = $('a[href="' + srcUrl + '"]').find('img').attr('src');
+
+        }
+        else {
+            payload['srcUrl'] = $('.ui-modal-trigger').find('img').attr('src');
+        }
+    }
+
+    send_message(payload);
+}
+
 // returns true if url leads to a file
 function isfile(url) {
     return new Promise(function (resolve, reject) {
@@ -107,7 +136,8 @@ function isfile(url) {
         xhttp.open('HEAD', url);
         xhttp.onreadystatechange = function () {
             if (this.readyState == this.DONE) {
-                if (this.getResponseHeader("Content-Type").indexOf("text/html") > -1) {
+                var test = this.getResponseHeader("Content-Type");
+                if ((test === null) || (test.indexOf("text/html") > -1)) {
                     resolve(false);
                 }
                 resolve(true);
@@ -170,13 +200,7 @@ chrome.runtime.onMessage.addListener(
             parseTumblr(request.info, request.folder);
         }
         else if (request.info.pageUrl.indexOf("pixiv.net") > -1) {
-            var payload = {
-                "srcUrl": request.info.srcUrl,
-                "pageUrl": request.info.pageUrl,
-                "folder": request.folder,
-                "headers": {"Referer": request.info.pageUrl}
-            };
-            send_message(payload);
+            parsePixiv(request.info, request.folder);
         }
         else {  // no custom processing
             var payload = {};

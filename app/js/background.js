@@ -169,7 +169,7 @@ function receiveMessage(response) {
 
 function sendMessage(payload) {
     if (port == null) {
-        connectPort()
+        connectPort();
     }
     port.postMessage(payload);
 }
@@ -181,9 +181,6 @@ function createMenu(folder) {
         contexts: ["all"],
         onclick: function (info) {
             //console.log(info);
-            if (info.mediaType == undefined) {
-                console.log('not media');
-            }
             processDownload(info, folder);
         }
     });
@@ -287,6 +284,7 @@ function getStreamData(name, dispName) {
                                 content.removeStream(j, index);
                             }
                         }
+                        content.clean();
                     }
                 });
             }
@@ -531,11 +529,29 @@ function uploadWindow(window) {
     chrome.storage.sync.set({ 'windows': jsonString });
 }
 
+function createDefaultMenus() {
+    var id = chrome.contextMenus.create({
+        title: 'Download Manga',
+        contexts: ['all'],
+        documentUrlPatterns: supportedSites,
+        onclick: function (info) {
+            console.log(info);
+            console.log("COWABUNGA");
+        }
+    });
+}
+
 function init() {
     chrome.browserAction.setBadgeBackgroundColor({ color: [14, 45, 199, 255] });
     chrome.browserAction.setBadgeText({ text: "0" });
 
-    connectPort()
+    // connect to host messenger
+    connectPort();
+    
+    // creates default context menu items
+    createDefaultMenus();
+    chrome.contextMenus.create({type: 'separator', contexts: ['all']});
+
     sendMessage({ 'task': 'sync' });
 }
 
@@ -550,6 +566,8 @@ var status = "";
 var port = null;
 var content = new Content();
 var activeMenus = [];
+var supportedSites = ["*://hentai.cafe/*"];
+
 var headers = { 'method': 'GET', 'headers': { 'Client-ID': 'b71k7vce5w1szw9joc08sdo4r19wqb1' } };
 
 init();
