@@ -41,7 +41,7 @@ function parseEhentai(srcUrl, pageUrl, folder, apiUrl) {
     }
     // get comicName
     var splitlink = comicLink.split('/');
-    var id = [splitlink[4], splitlink[5]];;
+    var id = [splitlink[4], splitlink[5]];
     var gdata = { "method": "gdata", "gidlist": [id], "namespace": 1 };
     send_req(apiUrl, gdata).then(function (response) {
         //console.log(response);
@@ -108,7 +108,7 @@ function parseTumblr(info, folder) {
 
 
 function parsePixiv(info, folder) {
-    console.log(info);
+    //console.log(info);
     var payload = {
         "pageUrl": info.pageUrl,
         "folder": folder,
@@ -191,10 +191,10 @@ chrome.runtime.onMessage.addListener(
         sendResponse({ "status": "Received" });
 
         if (request.info.pageUrl.indexOf("exhentai.org") > -1) {
-            parseEhentai(request.info.srcUrl, request.info.pageUrl, request.folder, "https://exhentai.org/api.php");
+            parseEhentai(request.info.srcUrl, request.info.pageUrl, request.folder, ex_api_url);
         }
         else if (request.info.pageUrl.indexOf("e-hentai.org") > -1) {
-            parseEhentai(request.srcUrl, request.pageUrl, request.folder, "https://api.ehentai.org/api.php");
+            parseEhentai(request.srcUrl, request.pageUrl, request.folder, eh_api_url);
         }
         else if (request.info.pageUrl.indexOf("tumblr.com") > -1) {
             parseTumblr(request.info, request.folder);
@@ -231,62 +231,176 @@ function getMaxImage() {
     return null;
 }
 
+function redirectEH(settings) {
+    var redirect = [];  // array containing redirect url patterns
+
+    // redirect EH fjorded/removed galleries/images
+    if (settings.redirectEH_un) {
+        //console.log(document.title);
+        if (document.title.indexOf("Gallery Not Available") > -1) {
+            redirectPage(url.replace("-", "x"), 0);
+            return;
+        }
+    }
+    // redirect EH Galleries
+    if (settings.redirectEH_g) {
+        redirect.push(["e-hentai.org/g/", ""]);
+    }
+    // redirect EH Images
+    if (settings.redirectEH_i) {
+        redirect.push(["e-hentai.org/s/", ""]);
+    }
+    // redirect EH Settings
+    if (settings.redirectEH_s) {
+        redirect.push(["e-hentai.org/uconfig.php", ""]);
+    }
+    // redirect EH Torrents
+    if (settings.redirectEH_t) {
+        redirect.push(["e-hentai.org/torrents.php", ""]);
+    }
+    // redirect EH Favorites
+    if (settings.redirectEH_f) {
+        redirect.push(["e-hentai.org/favorites.php", ""]);
+    }
+    // redirect EH My Galleries
+    if (settings.redirectEH_my) {
+        redirect.push(["upload.e-hentai.org/manage.php", "https://exhentai.org/upload/manage.php"]);
+    }
+
+    for (var i = 0; i < redirect.length; ++i) {
+        if (url.indexOf(redirect[i][0]) > -1) {
+            if (redirect[i][1] === "") {
+                url = url.replace("-", 'x');
+            } else {
+                url = redirect[i][1];
+            }
+                        
+            redirectPage(url);
+            return;
+        }
+    }
+}
+
+// redirects current window to destination
+function redirectPage(destination, wait) {
+    if(wait === undefined) {
+        wait = 3;   // default wait time in seconds
+    }
+    var countdown = setInterval(function () {
+        wait--;
+        if (wait < 0) {
+            clearInterval(countdown);
+            window.location.href = destination;
+        } else {
+            console.log('wait here for ' + count + ' more seconds');
+        }
+    }, 1000);
+}
+
+// places flags on galleries based on language
+function placeFlags(classes, apiUrl) {
+    var api_max_length = 25;
+    var elems = classes.map(function (x) {
+        return Array.prototype.slice.call(document.getElementsByClassName(x));
+    });
+    var all = elems[0];
+    for (var i = 1; i < elems.length; ++i) {
+        all = all.concat(elems[i]);
+    }
+
+    var gidlist = [];
+    // max length of api requests 25
+    for (var i = 0; i < all.length; i += api_max_length) {
+        gidlist.push(all.slice(i, i + api_max_length))
+    }
+
+    gidlist.forEach(function (elems) {
+        var ids = elems.map(function (e) {
+            var anchor = (e.getElementsByClassName('it5')[0]);
+            if (!anchor) {  // not in list view
+                anchor = (e.getElementsByClassName('id3')[0]);
+            }
+            anchor = anchor.firstElementChild.href.split('/');
+            return [anchor[4], anchor[5]];
+        });
+        var gdata = { "method": "gdata", "gidlist": ids, "namespace": 1 };
+        send_req(apiUrl, gdata).then(function (response) {
+            //console.log(response);
+            elems.forEach(function (e, i, _) {
+                var language = '';
+                var tags = response.gmetadata[i].tags;
+                for (var j = 0; j < tags.length; ++j) {
+                    var parts = tags[j].split(":");
+                    if ((parts[0] === 'language') && (parts[1] != 'translated')) {
+                        language = parts[1];
+                        break;
+                    }
+                    else if (parts[0] === 'reclass') {
+                        response.gmetadata[i].reclass = parts[1];
+                    }
+                }
+                if (!language) {
+                    if ((response.gmetadata[i].category === 'Western') ||
+                        (response.gmetadata[i].reclass === 'western')) {
+                        language = 'english';
+                    }
+                    else if ((response.gmetadata[i].category === 'Manga') ||
+                        (response.gmetadata[i].category === 'Doujinshi') ||
+                        (response.gmetadata[i].reclass === 'manga') ||
+                        (response.gmetadata[i].reclass === 'doujinshi')) {
+                        language = 'japanese';
+                    }
+                }
+
+                placeFlag(e, language);
+            });
+        });
+    });
+}
+
+
+function placeFlag(e, language) {
+    if (!language) {
+        return;
+    }
+
+    var flag = document.createElement('img');
+    flag.classList.add('eh_flag');
+    flag.src = chrome.extension.getURL("flags/" + language + ".svg");
+
+    var target = e.querySelector('.id3 > a');
+
+    if (!target) {
+        target = e.querySelector('.itd');
+        flag.classList.add('eh_flag_small');
+    }
+
+    target.appendChild(flag);
+}
+
 function start() {
     var url = document.URL;
     if (url.indexOf("e-hentai.org") > -1) {
         chrome.storage.local.get(null, function (item) {
             if (item.redirectEH) {
-                var redirect = [];  // array containing redirect url patterns
-                // redirect EH Galleries
-                if (item.redirectEH_g) {
-                    redirect.push(["e-hentai.org/g/", ""]);
-                }
-                // redirect EH Images
-                if (item.redirectEH_i) {
-                    redirect.push(["e-hentai.org/s/", ""]);
-                }
-                // redirect EH Settings
-                if (item.redirectEH_s) {
-                    redirect.push(["e-hentai.org/uconfig.php", ""]);
-                }
-                // redirect EH Torrents
-                if (item.redirectEH_t) {
-                    redirect.push(["e-hentai.org/torrents.php", ""]);
-                }
-                // redirect EH Favorites
-                if (item.redirectEH_f) {
-                    redirect.push(["e-hentai.org/favorites.php", ""]);
-                }
-                // redirect EH My Galleries
-                if (item.redirectEH_my) {
-                    redirect.push(["upload.e-hentai.org/manage.php", "https://exhentai.org/upload/manage.php"]);
-                }
-
-                for (var i = 0; i < redirect.length; ++i) {
-                    if (url.indexOf(redirect[i][0]) > -1) {
-                        if (redirect[i][1] === "") {
-                            url = url.replace("-", 'x');
-                        } else {
-                            url = redirect[i][1];
-                        }
-                        
-                        console.log("START");
-                        var count = 5;
-                        var countdown = setInterval(function () {
-                            count--;
-                            if (count < 0) {
-                                clearInterval(countdown);
-                                window.location.href = url;
-                            } else {
-                                console.log('wait here for ' + count + ' more seconds');
-                            }
-                        }, 1000);
-                        break;
-                    }
-                }
+                redirectEH(item);
             }
         });
+
+        placeFlags(["gtr0", "gtr1", "id1"], eh_api_url);
+        return;
+    }
+    else if (url.indexOf("exhentai.org") > -1) {
+        placeFlags(["gtr0", "gtr1", "id1"], ex_api_url);
+        return;
     }
 }
+
+var eh_api_url = "https://e-hentai.org/api.php";
+var ex_api_url = "https://exhentai.org/api.php";
+var style = document.createElement('style');
+style.innerHTML = '.eh_flag {overflow: visible; position: absolute; height: 35px; top: 0px; right: 0px; }' +
+                    '.eh_flag_small {height: 23px; margin-left: 6px; position: relative;}';
+document.head.appendChild(style);
 
 start();

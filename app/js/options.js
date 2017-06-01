@@ -24,6 +24,13 @@
                 chrome.storage.local.set({ 'redirectEH': redirectEH });
             }
         });
+        // redirect EH fjorded/removed Galleries/Images
+        var redirectEH_un = document.getElementById("redirectEH_un").checked;
+        chrome.storage.local.get('redirectEH_un', function (item) {
+            if (redirectEH_g != item.redirectEH_un) {
+                chrome.storage.local.set({ 'redirectEH_un': redirectEH_un });
+            }
+        });
         // redirect EH Galleries
         var redirectEH_g = document.getElementById("redirectEH_g").checked;
         chrome.storage.local.get('redirectEH_g', function (item) {
@@ -142,6 +149,10 @@
         chrome.storage.local.get(null, function (item) {
             if (item.redirectEH) {
                 document.getElementById('redirectEH').click();
+                // redirect fjorded/removed galleries/images
+                if (item.redirectEH_un) {
+                    document.getElementById('redirectEH_un').click();
+                }
                 // redirect EH Galleries
                 if (item.redirectEH_g) {
                     document.getElementById('redirectEH_g').click();
@@ -231,21 +242,27 @@ document.getElementById("redirectEH").addEventListener("click", function () {
 });
 
 
-function toggleSub(evt, subToggle) {
-    var x = document.getElementsByClassName(subToggle);
+function toggleSub(evt, subToggle, ignored) {
+    if (!ignored) {
+        ignored = [];
+    }
+
     $('.' + subToggle).each(function () {
-        if ($(this).css("display") === 'none') {
-            $(this).css('display', 'block');
-        } else {
-            $(this).css('display', 'none');
+        if (!ignored.includes($(this).find('input').attr('id'))) {
+            if ($(this).css("display") === 'none') {
+                $(this).css('display', 'block');
+            } else {
+                $(this).css('display', 'none');
+            }
         }
     });
 
-    $('.' + subToggle).each(function () {
+    // set sub options to false
+    /*$('.' + subToggle).each(function () {
         $(this).find('.toggle').each(function () {
             $(this).prop('checked', false);
         });
-    });
+    });*/
 }
 
 function checkStatus(payload) {

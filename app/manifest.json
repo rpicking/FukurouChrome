@@ -3,7 +3,7 @@
 
   "name": "Fukurou",
   "description": "Extension for displaying a users followed online streams, and other misc.",
-  "version": "0.5.6",
+  "version": "0.5.7",
 
   "background": {
     "scripts": [ "js/background.js" ]
@@ -17,7 +17,8 @@
       "run_at":  "document_end"
     }],
   "web_accessible_resources": [
-    "jquery-ui/images*.png"
+    "jquery-ui/images*.png",
+    "flags/*.svg"
   ],
   "icons": {
     "16": "img/icon-16.png",
