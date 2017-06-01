@@ -400,7 +400,11 @@ var eh_api_url = "https://e-hentai.org/api.php";
 var ex_api_url = "https://exhentai.org/api.php";
 var style = document.createElement('style');
 style.innerHTML = '.eh_flag {overflow: visible; position: absolute; height: 35px; top: 0px; right: 0px; }' +
-                    '.eh_flag_small {height: 23px; margin-left: 6px; position: relative;}';
+                    '.eh_flag_small {height: 23px; margin-left: 6px; position: relative;}' +
+                    '.itd {position: relative}' +
+                    '.it5 a {overflow: hidden; max-width: 652px; max-height: 30px; white-space: nowrap; text-overflow: ellipsis; display: block;}' +
+                    '.gtr0 .it5 a:hover {overflow: visible; white-space: normal; position: absolute; max-height: auto; max-width: 786px; z-index: 99999; background-color: #4f535b;}' +
+                    '.gtr1 .it5 a:hover {overflow: visible; white-space: normal; position: absolute; max-height: auto; max-width: 786px; z-index: 99999; background-color: #363940;}';
 document.head.appendChild(style);
 
 start();
