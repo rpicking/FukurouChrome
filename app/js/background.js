@@ -45,6 +45,7 @@ function sendDownload(payload) {
 }
 
 function connectPort() {
+    console.log("launching messenger")
     port = chrome.runtime.connectNative('vangard.fukurou.ext.msg');
     port.onDisconnect.addListener(function () {
         port = null;

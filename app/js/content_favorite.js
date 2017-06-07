@@ -231,7 +231,7 @@ function getMaxImage() {
     return null;
 }
 
-function redirectEH(settings) {
+function redirectEH(settings, url) {
     var redirect = [];  // array containing redirect url patterns
 
     // redirect EH fjorded/removed galleries/images
@@ -283,6 +283,7 @@ function redirectEH(settings) {
 
 // redirects current window to destination
 function redirectPage(destination, wait) {
+    console.log("Redirecting");
     if(wait === undefined) {
         wait = 3;   // default wait time in seconds
     }
@@ -360,7 +361,7 @@ function placeFlags(classes, apiUrl) {
 
 
 function placeFlag(e, language) {
-    if (!language) {
+    if (!language || (language === 'speechless')) {
         return;
     }
 
@@ -383,7 +384,7 @@ function start() {
     if (url.indexOf("e-hentai.org") > -1) {
         chrome.storage.local.get(null, function (item) {
             if (item.redirectEH) {
-                redirectEH(item);
+                redirectEH(item, url);
             }
         });
 
@@ -400,11 +401,19 @@ var eh_api_url = "https://e-hentai.org/api.php";
 var ex_api_url = "https://exhentai.org/api.php";
 var style = document.createElement('style');
 style.innerHTML = '.eh_flag {overflow: visible; position: absolute; height: 35px; top: 0px; right: 0px; }' +
-                    '.eh_flag_small {height: 23px; margin-left: 6px; position: relative;}' +
+                    '.eh_flag_small {height: 23px; border-radius: 5px; margin-left: 6px; position: relative;}' +
                     '.itd {position: relative}' +
                     '.it5 a {overflow: hidden; max-width: 652px; max-height: 30px; white-space: nowrap; text-overflow: ellipsis; display: block;}' +
                     '.gtr0 .it5 a:hover {overflow: visible; white-space: normal; position: absolute; max-height: auto; max-width: 786px; z-index: 99999; background-color: #4f535b;}' +
                     '.gtr1 .it5 a:hover {overflow: visible; white-space: normal; position: absolute; max-height: auto; max-width: 786px; z-index: 99999; background-color: #363940;}';
 document.head.appendChild(style);
+
+$(document).ready(function () {
+    // tumblr video volume control
+    // get all iframes
+    // send request getting document for iframes
+    // set volume of <video> to default
+    // on play show volume 
+});
 
 start();
