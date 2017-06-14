@@ -125,6 +125,9 @@ function parsePixiv(info, folder) {
             payload['srcUrl'] = $('.ui-modal-trigger').find('img').attr('src');
         }
     }
+    else {
+        payload['srcUrl'] = info.srcUrl;
+    }
 
     send_message(payload);
 }
