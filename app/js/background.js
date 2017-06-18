@@ -10,7 +10,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     //console.log(request);
     switch (request.task) {
         case "save":
-            sendDownload(request);
+            sendDownload(request, sender.tab.id);
             break;
         default:
             sendMessage(request);
@@ -31,16 +31,20 @@ comicPage: *OPTIONAL* page number of item
 artist: *OPTIONAL* artist/artists parent manga
 cookies: cookies from domain
 */
-function sendDownload(payload) {
+function sendDownload(payload, tab_id) {
     var cookies = [];
-    chrome.cookies.getAll({ 'url': payload.domain }, function (sitecookies) {
+    chrome.cookies.getAll({ 'url': payload.cookie_domain }, function (sitecookies) {
         var cookieslength = sitecookies.length;
         for (var i = 0; i < cookieslength; ++i) {
             cookies.push([sitecookies[i].name, sitecookies[i].value]);
         }
         payload.cookies = cookies;
-        delete payload.domain;  // dont need to send domain to host
-        sendMessage(payload);
+        delete payload.cookie_domain;  // dont need to send domain to host
+
+        chrome.tabs.get(tab_id, function (tab) {
+            payload['favicon_url'] = tab.favIconUrl;
+            sendMessage(payload);
+        });
     });
 }
 

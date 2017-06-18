@@ -150,7 +150,6 @@ function isfile(url) {
     });
 }
 
-
 // Makes request to apiUrl with package data
 function send_req(apiUrl, data) {
     return new Promise(function (resolve, reject) {
@@ -167,8 +166,8 @@ function send_req(apiUrl, data) {
 
 // Sends required info back to background for passing to host
 function send_message(payload) {
-    var domain = extractDomain(payload.pageUrl);
-    payload['domain'] = domain;
+    payload['cookie_domain'] = extractDomain(payload.pageUrl);
+    payload['domain'] = window.location.hostname;
     payload['task'] = 'save';
     //console.log(payload);
     chrome.runtime.sendMessage(payload, function (response) { });
