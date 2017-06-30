@@ -71,6 +71,7 @@ function receiveMessage(response) {
     //console.log(response);
     switch (response.task) {
         case 'sync':    // --- SYNC ---
+            console.log(response);
             localStorage.folders = JSON.stringify(response.folders);
 
             //clean "old" menus
@@ -81,17 +82,8 @@ function receiveMessage(response) {
             }
 
             activeMenus = [];
-            // Order created is order appears in context menu
-            for (var item in response.folders) {
-                var tmp = response.folders[item];
-                tmp['name'] = item;
-                folders.push(tmp);
-            }
-            folders.sort(function (a, b) {
-                return a.order > b.order;
-            });
-            for (var i = 0; i < folders.length; ++i) {
-                createMenu(folders[i].name);
+            for (var i = 0; i < response.folders.length; ++i) {
+                createMenu(response.folders[i].name, response.folders[i].uid);
             }
             break;
 
@@ -180,13 +172,13 @@ function sendMessage(payload) {
 }
 
 // creates menu item
-function createMenu(folder) {
+function createMenu(folder, uid) {
     var id = chrome.contextMenus.create({
         title: "Add to: " + folder,
         contexts: ["all"],
         onclick: function (info) {
             //console.log(info);
-            processDownload(info, folder);
+            processDownload(info, uid);
         }
     });
     activeMenus.push(id);
@@ -194,9 +186,9 @@ function createMenu(folder) {
 
 // folder: folder name that item will be downloaded to (setup in host)
 // send message to content script for further processing
-function processDownload(info, folder) {
+function processDownload(info, uid) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, { "info": info, "folder": folder }, function (response) {
+        chrome.tabs.sendMessage(tabs[0].id, { "info": info, "uid": uid }, function (response) {
             // do nothing because have specific method for catching all message to background
 
         });
@@ -541,7 +533,11 @@ function createDefaultMenus() {
         documentUrlPatterns: supportedSites,
         onclick: function (info) {
             console.log(info);
-            console.log("COWABUNGA");
+            payload = {
+                "task": "saveManga",
+                "url": info.pageUrl
+            }
+            sendMessage(payload);
         }
     });
 }

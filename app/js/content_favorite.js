@@ -5,7 +5,7 @@
 //}, true);
 
 
-function parseEhentai(srcUrl, pageUrl, folder, apiUrl) {
+function parseEhentai(srcUrl, pageUrl, uid, apiUrl) {
     var results = [];
     var comicLink = "";
     var comicName = "";
@@ -59,14 +59,14 @@ function parseEhentai(srcUrl, pageUrl, folder, apiUrl) {
             "comicLink": comicLink,
             "comicName": comicName,
             "artist": artist,
-            "folder": folder
+            "uid": uid
         }
         send_message(payload);
     });
 }
 
 
-function parseTumblr(info, folder) {
+function parseTumblr(info, uid) {
     //console.log(info);
     var payload = {};
     var srcUrl = info.srcUrl;
@@ -85,7 +85,7 @@ function parseTumblr(info, folder) {
 
             payload["srcUrl"] = srcUrl;
             payload["pageUrl"] = info.pageUrl;
-            payload["folder"] = folder;
+            payload["uid"] = uid;
             send_message(payload);
         });
         return;
@@ -94,7 +94,7 @@ function parseTumblr(info, folder) {
             srcUrl = $(html).find('source').attr('src');
             payload["srcUrl"] = srcUrl;
             payload["pageUrl"] = info.pageUrl;
-            payload["folder"] = folder;
+            payload["uid"] = uid;
             send_message(payload);
         });
         return;
@@ -102,16 +102,16 @@ function parseTumblr(info, folder) {
     // default
     payload["srcUrl"] = srcUrl;
     payload["pageUrl"] = info.pageUrl;
-    payload["folder"] = folder;
+    payload["uid"] = uid;
     send_message(payload);
 }
 
 
-function parsePixiv(info, folder) {
+function parsePixiv(info, uid) {
     //console.log(info);
     var payload = {
         "pageUrl": info.pageUrl,
-        "folder": folder,
+        "uid": uid,
         "headers": { "Referer": info.pageUrl }
     };
 
@@ -193,22 +193,22 @@ chrome.runtime.onMessage.addListener(
         sendResponse({ "status": "Received" });
 
         if (request.info.pageUrl.indexOf("exhentai.org") > -1) {
-            parseEhentai(request.info.srcUrl, request.info.pageUrl, request.folder, ex_api_url);
+            parseEhentai(request.info.srcUrl, request.info.pageUrl, request.uid, ex_api_url);
         }
         else if (request.info.pageUrl.indexOf("e-hentai.org") > -1) {
-            parseEhentai(request.srcUrl, request.pageUrl, request.folder, eh_api_url);
+            parseEhentai(request.srcUrl, request.pageUrl, request.uid, eh_api_url);
         }
         else if (request.info.pageUrl.indexOf("tumblr.com") > -1) {
-            parseTumblr(request.info, request.folder);
+            parseTumblr(request.info, request.uid);
         }
         else if (request.info.pageUrl.indexOf("pixiv.net") > -1) {
-            parsePixiv(request.info, request.folder);
+            parsePixiv(request.info, request.uid);
         }
         else {  // no custom processing
             var payload = {};
             payload["srcUrl"] = request.info.srcUrl;
             payload["pageUrl"] = request.info.pageUrl;
-            payload["folder"] = request.folder;
+            payload["uid"] = request.uid;
             send_message(payload);
         }
     });
@@ -334,7 +334,7 @@ function placeFlags(classes, apiUrl) {
                 var tags = response.gmetadata[i].tags;
                 for (var j = 0; j < tags.length; ++j) {
                     var parts = tags[j].split(":");
-                    if ((parts[0] === 'language') && (parts[1] != 'translated')) {
+                    if ((parts[0] === 'language') && (parts[1] != 'translated') && (parts[1] != 'rewrite')) {
                         language = parts[1];
                         break;
                     }
@@ -354,7 +354,6 @@ function placeFlags(classes, apiUrl) {
                         language = 'japanese';
                     }
                 }
-
                 placeFlag(e, language);
             });
         });
