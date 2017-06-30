@@ -75,7 +75,7 @@ function receiveMessage(response) {
             localStorage.folders = JSON.stringify(response.folders);
 
             //clean "old" menus
-            folders = [];
+            folders = response.folders;
             var menuLength = activeMenus.length;
             for (var i = 0; i < menuLength; ++i) {
                 chrome.contextMenus.remove(activeMenus[i]);
