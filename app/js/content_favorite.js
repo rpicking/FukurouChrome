@@ -206,7 +206,18 @@ chrome.runtime.onMessage.addListener(
         }
         else {  // no custom processing
             var payload = {};
-            payload["srcUrl"] = request.info.srcUrl;
+            if (request.info.hasOwnProperty("srcUrl")) {
+                payload["srcUrl"] = request.info.srcUrl;
+                
+            }
+            else {
+                if (request.info.hasOwnProperty("linkUrl")) {
+                    payload["srcUrl"] = request.info.linkUrl;
+                }
+                else {
+                    payload["srcUrl"] = request.info.srcUrl;
+                }
+            }
             payload["pageUrl"] = request.info.pageUrl;
             payload["uid"] = request.uid;
             send_message(payload);
@@ -286,16 +297,51 @@ function redirectEH(settings, url) {
 // redirects current window to destination
 function redirectPage(destination, wait) {
     console.log("Redirecting");
-    if(wait === undefined) {
+
+    // modal popup
+    modal = document.createElement("div");
+    modal.setAttribute("style", "display: none; position: fixed; z-index: 1; left: 0; right: 0; top: 0; width:100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.4);");
+
+    modalContent = document.createElement("div");
+    modalContent.setAttribute("style", "background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%;")
+    modal.appendChild(modalContent);
+
+    close = document.createElement("span");
+    close.innerHTML = "&times;";
+    close.setAttribute("style", "color: #aaa; float: right; font-size: 28px; font-weight: bold;")
+    close.onclick = function () {
+        modal.style.display = "none";
+        clearInterval(countdown);
+    }
+    modalContent.appendChild(close);
+
+
+    text = document.createElement("p");
+    modalContent.appendChild(text);
+
+    document.body.appendChild(modal);
+
+
+    modal.style.display = "block";
+
+    if (wait === undefined) {
         wait = 3;   // default wait time in seconds
     }
+    if (wait > 0) {
+        text.innerText = "Redirecting to EX in " + wait;
+    }
+    else {
+        text.innerText = "Redirecting to EX";
+    }
+   
     var countdown = setInterval(function () {
         wait--;
         if (wait < 0) {
             clearInterval(countdown);
             window.location.href = destination;
         } else {
-            console.log('wait here for ' + count + ' more seconds');
+            console.log('wait here for ' + wait + ' more seconds');
+            text.innerText = "Redirecting to EX in " + wait;
         }
     }, 1000);
 }

@@ -71,7 +71,7 @@ function receiveMessage(response) {
     //console.log(response);
     switch (response.task) {
         case 'sync':    // --- SYNC ---
-            console.log(response);
+            //console.log(response);
             localStorage.folders = JSON.stringify(response.folders);
 
             //clean "old" menus
