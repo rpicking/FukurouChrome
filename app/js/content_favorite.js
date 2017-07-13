@@ -187,40 +187,45 @@ function extractDomain(url) {
     return url;
 }
 
-// messages from Background
+// MESSAGES FROM BACKGROUND PAGE
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
         sendResponse({ "status": "Received" });
 
-        if (request.info.pageUrl.indexOf("exhentai.org") > -1) {
-            parseEhentai(request.info.srcUrl, request.info.pageUrl, request.uid, ex_api_url);
-        }
-        else if (request.info.pageUrl.indexOf("e-hentai.org") > -1) {
-            parseEhentai(request.srcUrl, request.pageUrl, request.uid, eh_api_url);
-        }
-        else if (request.info.pageUrl.indexOf("tumblr.com") > -1) {
-            parseTumblr(request.info, request.uid);
-        }
-        else if (request.info.pageUrl.indexOf("pixiv.net") > -1) {
-            parsePixiv(request.info, request.uid);
-        }
-        else {  // no custom processing
-            var payload = {};
-            if (request.info.hasOwnProperty("srcUrl")) {
-                payload["srcUrl"] = request.info.srcUrl;
-                
+        if (request.task === "download") {
+            if (request.info.pageUrl.indexOf("exhentai.org") > -1) {
+                parseEhentai(request.info.srcUrl, request.info.pageUrl, request.uid, ex_api_url);
             }
-            else {
-                if (request.info.hasOwnProperty("linkUrl")) {
-                    payload["srcUrl"] = request.info.linkUrl;
+            else if (request.info.pageUrl.indexOf("e-hentai.org") > -1) {
+                parseEhentai(request.srcUrl, request.pageUrl, request.uid, eh_api_url);
+            }
+            else if (request.info.pageUrl.indexOf("tumblr.com") > -1) {
+                parseTumblr(request.info, request.uid);
+            }
+            else if (request.info.pageUrl.indexOf("pixiv.net") > -1) {
+                parsePixiv(request.info, request.uid);
+            }
+            else {  // no custom processing
+                var payload = {};
+                if (request.info.hasOwnProperty("srcUrl")) {
+                    payload["srcUrl"] = request.info.srcUrl;
+
                 }
                 else {
-                    payload["srcUrl"] = request.info.srcUrl;
+                    if (request.info.hasOwnProperty("linkUrl")) {
+                        payload["srcUrl"] = request.info.linkUrl;
+                    }
+                    else {
+                        payload["srcUrl"] = request.info.srcUrl;
+                    }
                 }
+                payload["pageUrl"] = request.info.pageUrl;
+                payload["uid"] = request.uid;
+                send_message(payload);
             }
-            payload["pageUrl"] = request.info.pageUrl;
-            payload["uid"] = request.uid;
-            send_message(payload);
+        }
+        else if (request.task === "openUrl") {
+            window.location.href = request.url;
         }
     });
 

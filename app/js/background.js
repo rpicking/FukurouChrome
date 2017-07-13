@@ -85,6 +85,7 @@ function receiveMessage(response) {
             for (var i = 0; i < response.folders.length; ++i) {
                 createMenu(response.folders[i].name, response.folders[i].uid);
             }
+            createDefaultMenus();
             break;
 
         case 'edit':    // --- EDIT ---
@@ -164,7 +165,9 @@ function receiveMessage(response) {
     }
 }
 
+// send message to fukurou host application
 function sendMessage(payload) {
+    //console.log(payload);
     if (port == null) {
         connectPort();
     }
@@ -187,8 +190,13 @@ function createMenu(folder, uid) {
 // folder: folder name that item will be downloaded to (setup in host)
 // send message to content script for further processing
 function processDownload(info, uid) {
+    sendMessageToTab({ "task": "download", "info": info, "uid": uid });
+}
+
+// send message to currently active tab
+function sendMessageToTab(payload) {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, { "info": info, "uid": uid }, function (response) {
+        chrome.tabs.sendMessage(tabs[0].id, payload, function (response) {
             // do nothing because have specific method for catching all message to background
 
         });
@@ -208,286 +216,6 @@ function extractDomain(url) {
     }
     return url;
 }
-
-
-// -----------------------------------------------------------------
-// --------------------- TWITCH.TV ---------------------------------
-// -----------------------------------------------------------------
-
-// start twitch portion of extension
-function start() {
-    var username = localStorage.username;
-    if (!username) {
-        return;
-    }
-
-    content.clean();
-    var follows = "https://api.twitch.tv/kraken/users/" + username + "/follows/channels?limit=100";
-
-    fetch(follows, headers)
-        .then(
-            function (response) {
-                if (response.status !== 200) {
-                    console.log('Looks like there was a problem. Status Code: ' +
-                        response.status);
-                    return;
-                }
-                // get followed streamers
-                response.json().then(function (streamer) {
-                    var followed = [];
-                    for (var i = 0; i < streamer.follows.length; ++i) {
-                        var name = streamer.follows[i].channel.name;
-                        var dispName = streamer.follows[i].channel.display_name;
-                        followed.push(dispName);
-                        getStreamData(name, dispName);
-                    }
-
-                    // check for non followed streams
-                    content.invalidCheck(followed);
-                });
-            }
-        )
-        .catch(function (err) {
-            console.log('Fetch Error :-S', err);
-        });
-}
-
-
-function getStreamData(name, dispName) {
-    var live = "https://api.twitch.tv/kraken/streams/" + name;
-    fetch(live, headers)
-        .then(
-            function (response) {
-                if (response.status !== 200) {
-                    d = new Date();
-                    console.log('Looks like there was a problem. ' + d.toLocaleString() + ' Status Code: ' +
-                        response.status);
-                    return;
-                }
-                // get online status and information
-                response.json().then(function (data) {
-                    stream = data.stream;
-                    if (stream !== null) {     // stream is live
-                        var name = stream.channel.display_name;
-                        var viewers = stream.viewers;
-                        var url = stream.channel.url;
-                        var game = stream.game;
-                        content.addStream(name, viewers, url, game);
-                    }
-                    else {  // stream is offline
-                        for (var j = 0; j < content.games.length; ++j) {
-                            var index = content.games[j].checkDuplicate(dispName);
-                            if (index != -1) {
-                                content.removeStream(j, index);
-                            }
-                        }
-                        content.clean();
-                    }
-                });
-            }
-        )
-        .catch(function (er) {
-            console.log('Fetch Error :-S', er);
-        });
-}
-
-// Class for stream data asked for by popup
-// Content.games[]
-//    Game.streams[]
-//       Stream
-function Content() {
-    this.total = 0;
-    this.streamCount = 0;
-    this.games = [];
-}
-
-Content.prototype.addStream = function (name, views, link, game) {
-    game = game.toUpperCase();
-    var index = 0;
-    if (this.total == 0) {     // no games
-        this.games.push(new Game(game));
-    }
-    else {
-        index = this.searchGame(game);
-        if (index == -1) {   // game not already in list - Add new game
-            index = this.games.length;
-            this.games.push(new Game(game));
-            this.games.sort(compareGame);
-            index = this.searchGame(game);
-        }
-    }
-
-    // check and remove stream from old game (streamer changed game)
-    for (var i = 0; i < this.games.length; ++i) {
-        if (i != index) {
-            var oldGame = this.games[i].checkDuplicate(name);
-            if (oldGame > -1) {
-                this.removeStream(i, oldGame);
-            }
-        }
-    }
-
-    var dup = this.games[index].checkDuplicate(name);
-    if (dup == -1) {  // if not duplicate
-        this.games[index].streams.push(new Stream(name, views, link));
-        this.streamCount += 1;
-        this.updateBadge();
-    }
-    else {  // update stream views
-        this.games[index].updateStream(dup, views);
-    }
-
-    this.total = this.games.length;
-}
-
-Content.prototype.removeStream = function (gIndex, sIndex) {
-    this.games[gIndex].streams.splice(sIndex, 1);
-    if (this.games[gIndex].length == 0) {
-        this.games.splice(gIndex, 1);
-    }
-
-    this.streamCount -= 1;
-    this.updateBadge();
-}
-
-// checks all displayed streamers are still in followed
-Content.prototype.invalidCheck = function (followed) {
-    var remove = [];
-    for (var i = 0; i < this.games.length; ++i) {   //add invalid streams to remove
-        for (var j = 0; j < this.games[i].streams.length; ++j) {
-            if (followed.indexOf(this.games[i].streams[j].name) == -1) {
-                remove.push([i, j]);
-            }
-        }
-    }
-    for (var i = 0; i < remove.length; ++i) {   // delete all streams from content in remove
-        this.removeStream(remove[i][0], remove[i][1]);
-    }
-}
-
-Content.prototype.updateBadge = function () {
-    if(this.streamCount > 9) {
-        chrome.browserAction.setBadgeText({ text: "10+" });
-    }
-    else {
-        chrome.browserAction.setBadgeText({ text: String(this.streamCount) });
-    }
-}
-
-Content.prototype.clean = function () {
-    var dead = [];
-    for (var i = 0; i < this.games.length; ++i) {
-        if (this.games[i].streams.length == 0) {
-            dead.push(i);
-        }
-    }
-    for (var j = 0; j < dead.length; ++j) {
-        this.removeGame(dead[j]);
-    }
-}
-
-// removes game
-Content.prototype.removeGame = function (index) {
-    this.games.splice(index, 1);
-    //this.games.sort(compareGame);
-}
-
-// returns position of game if found else return -1
-Content.prototype.searchGame = function (game) {
-    for (var i = 0; i < this.games.length; ++i) {
-        if (!this.games[i].game.localeCompare(game)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-// creates html for all games in this.games
-Content.prototype.createHTML = function () {
-    var html = '';
-    if (this.streamCount === 0) {  // no current games
-        html = '<p id="vacant"> No streams online</p>';
-    }
-    else {
-        for (var i = 0; i < this.games.length; ++i) {  //loop through games
-            var game = this.games[i].game;
-            html += '<div class="game">' + game + '<hr>';
-
-            html += this.games[i].createHTML();
-            html += '</div>';
-        }
-    }
-
-    return html;
-}
-
-// class for game
-function Game(game) {
-    this.game = game;
-    this.streams = [];
-}
-
-// creates html for all streams in this.streams
-Game.prototype.createHTML = function () {
-    var html = '';
-
-    this.streams.sort(compareViews);
-    for (var i = 0; i < this.streams.length; ++i) {
-        html += '<a class="game stream" target="_blank" style="float:left" href="' + this.streams[i].link +
-            '">' + '<img class="site" src="img/twitch.png">' + this.streams[i].name +
-            '<span style="float:right;">' + this.streams[i].views + '</span><hr class="hr1"></a>';
-    }
-
-    return html;
-}
-
-// Returns position if match found else -1
-Game.prototype.checkDuplicate = function(name) {
-    //check for duplicate
-    for (var i = 0; i < this.streams.length; ++i) {
-        if (!this.streams[i].name.localeCompare(name)) {
-            return i;
-        }
-    }
-    return -1;
-}
-
-Game.prototype.updateStream = function (pos, views) {
-    this.streams[pos].views = views;
-}
-
-// class for stream
-function Stream(name, views, link) {
-    this.name = name;
-    this.views = views;
-    this.link = link;
-}
-
-// sort by views
-function compareViews(a, b) {
-    if (a.views < b.views) {
-        return 1;
-    }
-    if (a.views > b.views) {
-        return -1;
-    }
-    return 0;
-}
-
-// sort alphabetically by game name
-function compareGame(a, b) {
-    if (a.game < b.game) {
-        return -1;
-    }
-    if (a.game > b.game) {
-        return 1;
-    }
-    return 0;
-}
-
-// -------------------------------------
-// -----------END TWITCH ---------------
-// -------------------------------------
 
 function uploadWindows(openWindows) {
     var windows = [];
@@ -527,19 +255,80 @@ function uploadWindow(window) {
 }
 
 function createDefaultMenus() {
-    var id = chrome.contextMenus.create({
+    // manga processing 
+    chrome.contextMenus.create({ type: 'separator', contexts: ['all'], documentUrlPatterns: supportedSites });
+
+    activeMenus.push(chrome.contextMenus.create({
         title: 'Download Manga',
         contexts: ['all'],
         documentUrlPatterns: supportedSites,
         onclick: function (info) {
-            console.log(info);
+            //console.log(info);
             payload = {
                 "task": "saveManga",
                 "url": info.pageUrl
             }
             sendMessage(payload);
         }
-    });
+    }));
+    
+    // text searching
+    chrome.contextMenus.create({ type: 'separator', contexts: ['selection'] });
+
+    activeMenus.push(chrome.contextMenus.create({
+        title: 'Sadpanda Search',
+        contexts: ['selection'],
+        onclick: function (info) {
+            var url = "https://exhentai.org/?f_doujinshi=1&f_manga=1&f_artistcg=1&f_gamecg=1&f_western=1&f_non-h=1&f_imageset=1" +
+                "&f_cosplay=1&f_asianporn=1&f_misc=1&f_search=" + info.selectionText + "&f_sh=on&f_apply=Apply+Filter";
+            sendMessageToTab({ "task": "openUrl", "url": url });
+        }
+    }));
+    activeMenus.push(chrome.contextMenus.create({
+        title: 'nhentai.net Search',
+        contexts: ['selection'],
+        onclick: function (info) {
+            var url = "https://nhentai.net/search/?q=" + info.selectionText
+            sendMessageToTab({ "task": "openUrl", "url": url });
+        }
+    }));
+
+
+    // image searching
+    chrome.contextMenus.create({ type: 'separator', contexts: ['image'] });
+
+    activeMenus.push(chrome.contextMenus.create({
+        title: 'SauceNAO Search',
+        contexts: ['image'],
+        onclick: function (info) {
+            var url = "http://saucenao.com/search.php?db=999&url=" + info.srcUrl;
+            sendMessageToTab({ "task": "openUrl", "url": url });
+        }
+    }));
+    activeMenus.push(chrome.contextMenus.create({
+        title: 'IQDB Search',
+        contexts: ['image'],
+        onclick: function (info) {
+            var url = "http://iqdb.org/?url=" + info.srcUrl;
+            sendMessageToTab({ "task": "openUrl", "url": url });
+        }
+    }));
+    activeMenus.push(chrome.contextMenus.create({
+        title: 'TinEye Search',
+        contexts: ['image'],
+        onclick: function (info) {
+            var url = "http://tineye.com/search/?url=" + info.srcUrl;
+            sendMessageToTab({ "task": "openUrl", "url": url });
+        }
+    }));
+    activeMenus.push(chrome.contextMenus.create({
+        title: 'Google Image Search',
+        contexts: ['image'],
+        onclick: function (info) {
+            var url = "http://www.google.com/searchbyimage?image_url=" + info.srcUrl;
+            sendMessageToTab({ "task": "openUrl", "url": url });
+        }
+    }));
 }
 
 function init() {
@@ -549,10 +338,6 @@ function init() {
     // connect to host messenger
     connectPort();
     
-    // creates default context menu items
-    createDefaultMenus();
-    chrome.contextMenus.create({type: 'separator', contexts: ['all']});
-
     sendMessage({ 'task': 'sync' });
 }
 
@@ -565,13 +350,12 @@ var notificationUrl = null;
 var folders = [];
 var status = "";
 var port = null;
-var content = new Content();
 var activeMenus = [];
 var supportedSites = ["*://hentai.cafe/*"];
 
 var headers = { 'method': 'GET', 'headers': { 'Client-ID': 'b71k7vce5w1szw9joc08sdo4r19wqb1' } };
 
 init();
-start();
+startTwitchMonitor();
 
-setInterval(start, 60000);
+setInterval(startTwitchMonitor, 60000);

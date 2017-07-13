@@ -2,10 +2,8 @@
 //document.addEventListener('DOMContentLoaded', function () { });
 
 function init() {
-    var htmlContent = '';
     var streamResults = document.getElementById("streams");
-    htmlContent = chrome.extension.getBackgroundPage().content.createHTML();
-    streamResults.innerHTML = htmlContent;
+    streamResults.innerHTML = chrome.extension.getBackgroundPage().createHTML();
 	
 }
 

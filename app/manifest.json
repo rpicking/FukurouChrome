@@ -3,10 +3,10 @@
 
   "name": "Fukurou",
   "description": "Extension for displaying a users followed online streams, and other misc.",
-  "version": "0.6.3",
+  "version": "0.6.4",
 
   "background": {
-    "scripts": [ "js/background.js" ]
+    "scripts": [ "js/twitchstreams.js", "js/background.js" ]
   },
   "options_page": "options.html",
   "content_scripts": [
