@@ -132,6 +132,39 @@ function parsePixiv(info, uid) {
     send_message(payload);
 }
 
+
+function parseTsumino(info, uid) {
+    var payload = {
+        "pageUrl": info.pageUrl,
+        "uid": uid,
+        "srcUrl": info.srcUrl
+    }
+
+    var buttons = document.getElementsByClassName("button-stack");
+    var title = "";
+    for (var i = 0; i < buttons.length; ++i) {
+        if (buttons[i].textContent == "RETURN") {
+            title = buttons[i].href;
+        }
+    }
+
+    if (title) {
+        title = title.substring(title.lastIndexOf("/") + 1);
+
+        var pageNum = info.pageUrl.split("/");
+        pageNum = pageNum[pageNum.length - 1];
+        anchorPos = pageNum.indexOf("#");
+
+        if (anchorPos > -1) {
+            pageNum = pageNum.substring(anchorPos + 1);
+        }
+        pageNum = ('000' + pageNum).substr(-3);
+    }
+    payload['filename'] = title + " - " + pageNum;
+    send_message(payload);
+}
+
+
 // returns true if url leads to a file
 function isfile(url) {
     return new Promise(function (resolve, reject) {
@@ -150,6 +183,7 @@ function isfile(url) {
     });
 }
 
+
 // Makes request to apiUrl with package data
 function send_req(apiUrl, data) {
     return new Promise(function (resolve, reject) {
@@ -164,6 +198,7 @@ function send_req(apiUrl, data) {
     });
 }
 
+
 // Sends required info back to background for passing to host
 function send_message(payload) {
     payload['cookie_domain'] = extractDomain(payload.pageUrl);
@@ -172,6 +207,7 @@ function send_message(payload) {
     //console.log(payload);
     chrome.runtime.sendMessage(payload, function (response) { });
 }
+
 
 // returns domain name from url
 function extractDomain(url) {
@@ -187,23 +223,28 @@ function extractDomain(url) {
     return url;
 }
 
+
 // MESSAGES FROM BACKGROUND PAGE
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
+        console.log(request);
         sendResponse({ "status": "Received" });
-
         if (request.task === "download") {
-            if (request.info.pageUrl.indexOf("exhentai.org") > -1) {
+            var pageUrl = request.info.pageUrl;
+            if (pageUrl.indexOf("exhentai.org") > -1) {
                 parseEhentai(request.info.srcUrl, request.info.pageUrl, request.uid, ex_api_url);
             }
-            else if (request.info.pageUrl.indexOf("e-hentai.org") > -1) {
+            else if (pageUrl.indexOf("e-hentai.org") > -1) {
                 parseEhentai(request.srcUrl, request.pageUrl, request.uid, eh_api_url);
             }
-            else if (request.info.pageUrl.indexOf("tumblr.com") > -1) {
+            else if (pageUrl.indexOf("tumblr.com") > -1) {
                 parseTumblr(request.info, request.uid);
             }
-            else if (request.info.pageUrl.indexOf("pixiv.net") > -1) {
+            else if (pageUrl.indexOf("pixiv.net") > -1) {
                 parsePixiv(request.info, request.uid);
+            }
+            else if (pageUrl.indexOf("tsumino.com") > -1) {
+                parseTsumino(request.info, request.uid);
             }
             else {  // no custom processing
                 var payload = {};
@@ -248,6 +289,7 @@ function getMaxImage() {
         return maxImage.src;
     return null;
 }
+
 
 function redirectEH(settings, url) {
     var redirect = [];  // array containing redirect url patterns
@@ -298,6 +340,7 @@ function redirectEH(settings, url) {
         }
     }
 }
+
 
 // redirects current window to destination
 function redirectPage(destination, wait) {
@@ -350,6 +393,7 @@ function redirectPage(destination, wait) {
         }
     }, 1000);
 }
+
 
 // places flags on galleries based on language
 function placeFlags(classes, apiUrl) {
@@ -431,6 +475,7 @@ function placeFlag(e, language) {
     target.appendChild(flag);
 }
 
+
 function start() {
     var url = document.URL;
     if (url.indexOf("e-hentai.org") > -1) {
@@ -448,6 +493,7 @@ function start() {
         return;
     }
 }
+
 
 var eh_api_url = "https://e-hentai.org/api.php";
 var ex_api_url = "https://exhentai.org/api.php";

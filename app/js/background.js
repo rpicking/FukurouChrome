@@ -279,8 +279,8 @@ function createDefaultMenus() {
         title: 'Sadpanda Search',
         contexts: ['selection'],
         onclick: function (info) {
-            var url = "https://exhentai.org/?f_doujinshi=1&f_manga=1&f_artistcg=1&f_gamecg=1&f_western=1&f_non-h=1&f_imageset=1" +
-                "&f_cosplay=1&f_asianporn=1&f_misc=1&f_search=" + info.selectionText + "&f_sh=on&f_apply=Apply+Filter";
+            var url = 'https://exhentai.org/?f_doujinshi=1&f_manga=1&f_artistcg=1&f_gamecg=1&f_western=1&f_non-h=1&f_imageset=1' +
+                '&f_cosplay=1&f_asianporn=1&f_misc=1&f_search="' + info.selectionText + '"&f_sh=on&f_apply=Apply+Filter';
             sendMessageToTab({ "task": "openUrl", "url": url });
         }
     }));
@@ -288,7 +288,7 @@ function createDefaultMenus() {
         title: 'nhentai.net Search',
         contexts: ['selection'],
         onclick: function (info) {
-            var url = "https://nhentai.net/search/?q=" + info.selectionText
+            var url = 'https://nhentai.net/search/?q="' + info.selectionText + '"';
             sendMessageToTab({ "task": "openUrl", "url": url });
         }
     }));

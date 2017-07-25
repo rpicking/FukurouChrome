@@ -8,11 +8,13 @@ Features
 * One-click downloading to custom folders in host application
 * Editing/reordering custom folder in browser
 * Custom download behavior for sites
-  * Ex/Ehentai
+  * Sadpanda
     * Download best quality of image
     * Send gallery tags to host (currently unused)
   * Tumblr
     * One click download for videos
+    * Automatically chooses largest image size
+  * Pixiv
 * Live followed twitch streams (ordered and catagorized)
 
 
