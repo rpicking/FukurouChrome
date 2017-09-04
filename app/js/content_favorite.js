@@ -7,19 +7,16 @@
 
 function parseEhentai(srcUrl, pageUrl, uid, apiUrl) {
     var results = [];
-    var comicLink = "";
-    var comicName = "";
-    var comicPage = "";
-    var artist = "";
+    var galleryUrl = "";
 
     var elem = document.getElementsByClassName("gm");
     if (elem.length != 0) {   // currently on gallery page
-        comicLink = document.URL;
+        galleryUrl = document.URL;
     }
     else {  // not currently on gallery page
         gal = document.getElementById("i5");
         if (gal) { // currently in gallery slideshow
-            comicLink = gal.getElementsByClassName('sb')[0].getElementsByTagName("a")[0].href;
+            galleryUrl = gal.getElementsByClassName('sb')[0].getElementsByTagName("a")[0].href;
             bestimg = document.getElementById("i7").getElementsByTagName('a');
             if (bestimg.length > 0) {
                 srcUrl = bestimg[0].href;  //update srcUrl to larger image
@@ -36,33 +33,17 @@ function parseEhentai(srcUrl, pageUrl, uid, apiUrl) {
                     break;
                 }
             }
-            comicLink = target.parentNode.href;
+            galleryUrl = target.parentNode.href;
         }
     }
-    // get comicName
-    var splitlink = comicLink.split('/');
-    var id = [splitlink[4], splitlink[5]];
-    var gdata = { "method": "gdata", "gidlist": [id], "namespace": 1 };
-    send_req(apiUrl, gdata).then(function (response) {
-        //console.log(response);
-        comicName = response.gmetadata[0].title;
-        len = response.gmetadata[0].tags.length;
-        for (var i = 0; i < len; ++i) {
-            if (response.gmetadata[0].tags[i].startsWith("artist:")) {  // tag is artist
-                artist = response.gmetadata[0].tags[i]  
-                artist = artist.substring(artist.indexOf(":") + 1); // remove artist: from tag
-            }
-        }
-        payload = {
+
+    payload = {
             "srcUrl": srcUrl,
             "pageUrl": pageUrl,
-            "comicLink": comicLink,
-            "comicName": comicName,
-            "artist": artist,
+            "galleryUrl": clean_url(galleryUrl),
             "uid": uid
         }
-        send_message(payload);
-    });
+    send_dl_message(payload);
 }
 
 
@@ -86,7 +67,7 @@ function parseTumblr(info, uid) {
             payload["srcUrl"] = srcUrl;
             payload["pageUrl"] = info.pageUrl;
             payload["uid"] = uid;
-            send_message(payload);
+            send_dl_message(payload);
         });
         return;
     } else if (info.hasOwnProperty("frameUrl")) {
@@ -95,7 +76,7 @@ function parseTumblr(info, uid) {
             payload["srcUrl"] = srcUrl;
             payload["pageUrl"] = info.pageUrl;
             payload["uid"] = uid;
-            send_message(payload);
+            send_dl_message(payload);
         });
         return;
     }
@@ -103,7 +84,7 @@ function parseTumblr(info, uid) {
     payload["srcUrl"] = srcUrl;
     payload["pageUrl"] = info.pageUrl;
     payload["uid"] = uid;
-    send_message(payload);
+    send_dl_message(payload);
 }
 
 
@@ -129,7 +110,7 @@ function parsePixiv(info, uid) {
         payload['srcUrl'] = info.srcUrl;
     }
 
-    send_message(payload);
+    send_dl_message(payload);
 }
 
 
@@ -161,9 +142,16 @@ function parseTsumino(info, uid) {
         pageNum = ('000' + pageNum).substr(-3);
     }
     payload['filename'] = title + " - " + pageNum;
-    send_message(payload);
+    send_dl_message(payload);
 }
 
+
+// "cleans" url string removing fragments and queries
+function clean_url(url) {
+    url = url.split('?')[0];  // remove queries
+    url = url.split('"')[0];  // remove fragment
+    return url;
+}
 
 // returns true if url leads to a file
 function isfile(url) {
@@ -199,8 +187,8 @@ function send_req(apiUrl, data) {
 }
 
 
-// Sends required info back to background for passing to host
-function send_message(payload) {
+// Sends required download info back to background for passing to host
+function send_dl_message(payload) {
     payload['cookie_domain'] = extractDomain(payload.pageUrl);
     payload['domain'] = window.location.hostname;
     payload['task'] = 'save';
@@ -262,11 +250,24 @@ chrome.runtime.onMessage.addListener(
                 }
                 payload["pageUrl"] = request.info.pageUrl;
                 payload["uid"] = request.uid;
-                send_message(payload);
+                send_dl_message(payload);
             }
         }
         else if (request.task === "openUrl") {
-            window.location.href = request.url;
+            chrome.storage.local.get('contextOpenType', function (item) {
+                if (item.contextOpenType == 1) {   // new tab
+                    chrome.runtime.sendMessage({ "task": "openTab", "url": request.url }, function (response) { });
+                }
+                else if (item.contextOpenType == 2) {   // new window
+                    chrome.runtime.sendMessage({ "task": "openWindow", "url": request.url }, function (response) { });
+                }
+                else if (item.contextOpenType == 3) {   // new incognito window
+                    chrome.runtime.sendMessage({ "task": "openIncognitoWindow", "url": request.url }, function (response) { });
+                }
+                else {  // contextOpenType == 0 or not set
+                    window.location.href = request.url;
+                }
+            });
         }
     });
 

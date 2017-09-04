@@ -8,15 +8,6 @@
         var indicator = document.getElementById("saveSettings").getElementsByTagName("span")[0];
         indicator.classList.add("glyphicon", "glyphicon-refresh", "spinning");
 
-
-        // twitch username
-        var twitchnameInput = document.getElementById("twitch-username");
-        var username = twitchnameInput.value;
-        if (username != localStorage.username) {
-            localStorage.username = username;
-            chrome.extension.getBackgroundPage().start();
-        }
-
         // redirect EHentai
         var redirectEH = document.getElementById("redirectEH").checked;
         chrome.storage.local.get('redirectEH', function (item) {
@@ -74,6 +65,22 @@
             }
         });
 
+        // Context Menu Opening Type
+        var contextOpenType = $('#contextOpeningDropdown option:selected').val();
+        chrome.storage.local.get('contextOpenType', function (item) {
+            if (contextOpenType != item.contextOpenType) {
+                chrome.storage.local.set({ 'contextOpenType': contextOpenType });
+            }
+        });
+
+        // twitch username
+        var twitchnameInput = document.getElementById("twitch-username");
+        var username = twitchnameInput.value;
+        if (username != localStorage.username) {
+            localStorage.username = username;
+            chrome.extension.getBackgroundPage().start();
+        }
+        
         // build name/order change message
         var edit_folders = [];
         var folders = chrome.extension.getBackgroundPage().folders;
@@ -95,8 +102,8 @@
                         tmp['name'] = new_name;
                         push_check = true;
                     }
-                    if ((i + 1) != folders[j].order) {
-                        tmp['order'] = i + 1;
+                    if (i != j) {
+                        tmp['order'] = i + 1;   // ordering starts at 1 not 0 in db FIXME
                         push_check = true;
                     }
                     if (push_check) {
@@ -177,6 +184,11 @@
                 if (item.redirectEH_my) {
                     document.getElementById('redirectEH_my').click();
                 }
+            }
+
+            if (item.contextOpenType) {
+                $('select[name=contextOpening]').val(item.contextOpenType);
+                //$('.selectpicker').selectpicker('refresh');
             }
         });
 
@@ -298,9 +310,7 @@ function statusLoop() {
 
 function sendMessage(payload) {
     console.log(payload);
-    chrome.runtime.sendMessage(payload, function (response) {
-
-    });
+    chrome.runtime.sendMessage(payload, function (response) {});
 }
 
 // "sets" input into list item and if different send message to background to change
