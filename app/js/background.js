@@ -12,6 +12,17 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         case "save":
             sendDownload(request, sender.tab.id);
             break;
+        case "openTab":
+            chrome.tabs.query({ "active": true, "currentWindow": true }, function (tabs) {
+                chrome.tabs.create({ "url": request.url, "index": tabs[0].index + 1});
+            });
+            break;
+        case "openWindow":
+            chrome.windows.create({ "url": request.url, "focused": true});
+            break;
+        case "openIncognitoWindow":
+            chrome.windows.create({ "url": request.url, "focused": true, "incognito": true });
+            break;
         default:
             sendMessage(request);
             break;
@@ -154,9 +165,13 @@ function receiveMessage(response) {
             }
             break;
         case 'resend':  // --- RESEND ---
-            response.task = response.type
-            delete response.type
+            console.log("RESENDING");
+            response.task = response.type;
+            delete response.type;
             sendMessage(response);
+            break;
+        case 'none':
+            // do nothing 
             break;
             // --- DEFAULT ---
         default:
@@ -279,8 +294,9 @@ function createDefaultMenus() {
         title: 'Sadpanda Search',
         contexts: ['selection'],
         onclick: function (info) {
+            console.log(info.selectionText);
             var url = 'https://exhentai.org/?f_doujinshi=1&f_manga=1&f_artistcg=1&f_gamecg=1&f_western=1&f_non-h=1&f_imageset=1' +
-                '&f_cosplay=1&f_asianporn=1&f_misc=1&f_search="' + info.selectionText + '"&f_sh=on&f_apply=Apply+Filter';
+                '&f_cosplay=1&f_asianporn=1&f_misc=1&f_search=' + info.selectionText + '&f_sh=on&f_apply=Apply+Filter';
             sendMessageToTab({ "task": "openUrl", "url": url });
         }
     }));
