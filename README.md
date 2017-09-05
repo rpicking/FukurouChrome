@@ -5,17 +5,14 @@ one click downloading to custom folders saved in the Fukurou host application.
 
 Features
 -------------
-* One-click downloading to custom folders in host application
+* One-click downloading to custom folders in FukurouViewer application
 * Editing/reordering custom folder in browser
 * Custom download behavior for sites
-  * Sadpanda
-    * Download best quality of image
-    * Send gallery tags to host (currently unused)
   * Tumblr
     * One click download for videos
     * Automatically chooses largest image size
   * Pixiv
-* Live followed twitch streams (ordered and catagorized)
+* Live followed twitch streams (ordered and catagorized by game)
 
 
 Planned Features
