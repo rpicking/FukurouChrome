@@ -4,7 +4,6 @@
 function init() {
     var streamResults = document.getElementById("streams");
     streamResults.innerHTML = chrome.extension.getBackgroundPage().createHTML();
-	
 }
 
 document.addEventListener('DOMContentLoaded', function () {

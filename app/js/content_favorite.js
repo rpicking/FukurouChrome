@@ -57,10 +57,21 @@ function parseTumblr(info, uid) {
             if (file) {
                 srcUrl = info.linkUrl;
             }
-            else {
+            else {  // larger file modal
                 var larger_image = $('a[href="' + info.linkUrl + '"]').attr('data-big-photo');
                 if (larger_image) {
                     srcUrl = larger_image;
+                }
+                else {  // link is to page containing navigation header and image
+                    // this type is only used on images (confirmation needed)
+                    $.get(info.linkUrl).then(data => {
+                        srcUrl = $(data).find("#content-image").attr('data-src');
+                        payload["srcUrl"] = srcUrl;
+                        payload["pageUrl"] = info.pageUrl;
+                        payload["uid"] = uid;
+                        send_dl_message(payload);
+                    });
+                    return;
                 }
             }
 
@@ -71,8 +82,8 @@ function parseTumblr(info, uid) {
         });
         return;
     } else if (info.hasOwnProperty("frameUrl")) {
-        $.get(info.frameUrl).then(html => {
-            srcUrl = $(html).find('source').attr('src');
+        $.get(info.frameUrl).then(data => {
+            srcUrl = $(data).find('source').attr('src');
             payload["srcUrl"] = srcUrl;
             payload["pageUrl"] = info.pageUrl;
             payload["uid"] = uid;
