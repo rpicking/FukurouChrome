@@ -48,39 +48,39 @@ function parseEhentai(srcUrl, pageUrl, uid, apiUrl) {
 
 
 function parseTumblr(info, uid) {
-    //console.log(info);
+    console.log(info);
     var payload = {};
     var srcUrl = info.srcUrl;
 
     if (info.hasOwnProperty("linkUrl")) {
-        isfile(info.linkUrl).then(function (file) {
-            if (file) {
-                srcUrl = info.linkUrl;
-            }
-            else {  // larger file modal
-                var larger_image = $('a[href="' + info.linkUrl + '"]').attr('data-big-photo');
-                if (larger_image) {
-                    srcUrl = larger_image;
-                }
-                else {  // link is to page containing navigation header and image
-                    // this type is only used on images (confirmation needed)
-                    $.get(info.linkUrl).then(data => {
-                        srcUrl = $(data).find("#content-image").attr('data-src');
-                        payload["srcUrl"] = srcUrl;
-                        payload["pageUrl"] = info.pageUrl;
-                        payload["uid"] = uid;
-                        send_dl_message(payload);
-                    });
-                    return;
-                }
-            }
+        if (info.linkUrl.indexOf("dashboard") === -1) { // not clicking on a modal on dashboard
+            check_if_file(info.linkUrl).then(function (isFile) {
 
-            payload["srcUrl"] = srcUrl;
-            payload["pageUrl"] = info.pageUrl;
-            payload["uid"] = uid;
-            send_dl_message(payload);
-        });
-        return;
+                srcUrl = info.linkUrl;
+                if (!isFile) {  // larger file modal
+                    var larger_image = $('a[href="' + info.linkUrl + '"]').attr('data-big-photo');
+                    if (larger_image) {
+                        srcUrl = larger_image;
+                    }
+                    else {  // link is to page containing navigation header and image
+                        // this type is only used on images (confirmation needed)
+                        $.get(info.linkUrl).then(data => {
+                            srcUrl = $(data).find("#content-image").attr('data-src');
+                            payload["srcUrl"] = srcUrl;
+                            payload["pageUrl"] = info.pageUrl;
+                            payload["uid"] = uid;
+                            send_dl_message(payload);
+                        });
+                        return;
+                    }
+                }
+                payload["srcUrl"] = srcUrl;
+                payload["pageUrl"] = info.pageUrl;
+                payload["uid"] = uid;
+                send_dl_message(payload);
+            });
+            return;
+        }
     } else if (info.hasOwnProperty("frameUrl")) {
         $.get(info.frameUrl).then(data => {
             srcUrl = $(data).find('source').attr('src');
@@ -165,7 +165,7 @@ function clean_url(url) {
 }
 
 // returns true if url leads to a file
-function isfile(url) {
+function check_if_file(url) {
     return new Promise(function (resolve, reject) {
         var xhttp = new XMLHttpRequest();
         xhttp.open('HEAD', url);
