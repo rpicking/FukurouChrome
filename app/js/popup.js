@@ -9,7 +9,7 @@ function init() {
 document.addEventListener('DOMContentLoaded', function () {
     var refresh = document.getElementById("refresh");
     refresh.addEventListener('click', function () {
-        chrome.extension.getBackgroundPage().start();
+        chrome.extension.getBackgroundPage().refreshTwitch();
         refresh.className = 'rotate';
         setTimeout(function () {
             location.reload();

@@ -347,6 +347,10 @@ function createDefaultMenus() {
     }));
 }
 
+function refreshTwitch() {
+    startTwitchMonitor();
+}
+
 function init() {
     chrome.browserAction.setBadgeBackgroundColor({ color: [14, 45, 199, 255] });
     chrome.browserAction.setBadgeText({ text: "0" });
