@@ -461,6 +461,9 @@ function placeFlags(classes, apiUrl) {
                         language = 'japanese';
                     }
                 }
+                else if (language == 'text cleaned') {
+                    return;
+                }
                 placeFlag(e, language);
             });
         });
