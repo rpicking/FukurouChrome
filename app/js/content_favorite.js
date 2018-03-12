@@ -264,22 +264,6 @@ chrome.runtime.onMessage.addListener(
                 send_dl_message(payload);
             }
         }
-        else if (request.task === "openUrl") {
-            chrome.storage.local.get('contextOpenType', function (item) {
-                if (item.contextOpenType == 1) {   // new tab
-                    chrome.runtime.sendMessage({ "task": "openTab", "url": request.url }, function (response) { });
-                }
-                else if (item.contextOpenType == 2) {   // new window
-                    chrome.runtime.sendMessage({ "task": "openWindow", "url": request.url }, function (response) { });
-                }
-                else if (item.contextOpenType == 3) {   // new incognito window
-                    chrome.runtime.sendMessage({ "task": "openIncognitoWindow", "url": request.url }, function (response) { });
-                }
-                else {  // contextOpenType == 0 or not set
-                    window.location.href = request.url;
-                }
-            });
-        }
     });
 
 

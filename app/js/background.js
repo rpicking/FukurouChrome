@@ -12,17 +12,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         case "save":
             sendDownload(request, sender.tab.id);
             break;
-        case "openTab":
-            chrome.tabs.query({ "active": true, "currentWindow": true }, function (tabs) {
-                chrome.tabs.create({ "url": request.url, "index": tabs[0].index + 1});
-            });
-            break;
-        case "openWindow":
-            chrome.windows.create({ "url": request.url, "focused": true});
-            break;
-        case "openIncognitoWindow":
-            chrome.windows.create({ "url": request.url, "focused": true, "incognito": true });
-            break;
         default:
             sendMessage(request);
             break;
@@ -269,6 +258,26 @@ function uploadWindow(window) {
     chrome.storage.sync.set({ 'windows': jsonString });
 }
 
+// opens url in new tab/window/incognito based on setting
+function openUrl(url) {
+    chrome.storage.local.get('contextOpenType', function (item) {
+        if (item.contextOpenType == 1) {   // new tab
+            chrome.tabs.query({ "active": true, "currentWindow": true }, function (tabs) {
+                chrome.tabs.create({ "url": url, "index": tabs[0].index + 1});
+            });
+        }
+        else if (item.contextOpenType == 2) {   // new window
+            chrome.windows.create({ "url": url, "focused": true});
+        }
+        else if (item.contextOpenType == 3) {   // new incognito window
+            chrome.windows.create({ "url": url, "focused": true, "incognito": true });
+        }
+        else {  // contextOpenType == 0 or not set
+            window.location.href = request.url;
+        }
+    });
+}
+
 function createDefaultMenus() {
     // manga processing 
     chrome.contextMenus.create({ type: 'separator', contexts: ['all'], documentUrlPatterns: supportedSites });
@@ -295,17 +304,38 @@ function createDefaultMenus() {
         contexts: ['selection'],
         onclick: function (info) {
             console.log(info.selectionText);
-            var url = 'https://exhentai.org/?f_doujinshi=1&f_manga=1&f_artistcg=1&f_gamecg=1&f_western=1&f_non-h=1&f_imageset=1' +
-                '&f_cosplay=1&f_asianporn=1&f_misc=1&f_search=' + info.selectionText + '&f_sh=on&f_apply=Apply+Filter';
-            sendMessageToTab({ "task": "openUrl", "url": url });
+
+            //var url = 'https://exhentai.org/';
+            var params = {
+                "f_doujinshi": 1,
+                "f_manga": 1,
+                "f_artistcg": 1,
+                "f_gamecg": 1,
+                "f_western": 1,
+                "f_non-h": 1,
+                "f_imageset": 1,
+                "f_cosplay": 1,
+                "f_asianporn": 1,
+                "f_misc": 1,
+                "f_search": info.selectionText,
+                "f_sh": "on",
+                "f_apply": "Apply Filter"
+            }
+
+            console.log(params);
+            var test = encodeURIComponent(JSON.stringify(params));
+            var url = 'https://exhentai.org/?' + $.param(params);
+            openUrl(url);
         }
     }));
     activeMenus.push(chrome.contextMenus.create({
         title: 'nhentai.net Search',
         contexts: ['selection'],
         onclick: function (info) {
-            var url = 'https://nhentai.net/search/?q="' + info.selectionText + '"';
-            sendMessageToTab({ "task": "openUrl", "url": url });
+            
+            var params = { q: info.selectionText };
+            var url = 'https://nhentai.net/search/?' + $.param(params);
+            openUrl(url);
         }
     }));
 
@@ -317,32 +347,39 @@ function createDefaultMenus() {
         title: 'SauceNAO Search',
         contexts: ['image'],
         onclick: function (info) {
-            var url = "http://saucenao.com/search.php?db=999&url=" + info.srcUrl;
-            sendMessageToTab({ "task": "openUrl", "url": url });
+            var params = {
+                db: 999,
+                url: info.srcUrl
+            };
+            var url = "http://saucenao.com/search.php?" + $.param(params);
+            openUrl(url);
         }
     }));
     activeMenus.push(chrome.contextMenus.create({
         title: 'IQDB Search',
         contexts: ['image'],
         onclick: function (info) {
-            var url = "http://iqdb.org/?url=" + info.srcUrl;
-            sendMessageToTab({ "task": "openUrl", "url": url });
+            var params = { url: info.srcUrl };
+            var url = "http://iqdb.org/?" + $.param(params);
+            openUrl(url);
         }
     }));
     activeMenus.push(chrome.contextMenus.create({
         title: 'TinEye Search',
         contexts: ['image'],
         onclick: function (info) {
-            var url = "http://tineye.com/search/?url=" + info.srcUrl;
-            sendMessageToTab({ "task": "openUrl", "url": url });
+            var params = { url: info.srcUrl };
+            var url = "http://tineye.com/search/?" + $.param(params);
+            openUrl(url);
         }
     }));
     activeMenus.push(chrome.contextMenus.create({
         title: 'Google Image Search',
         contexts: ['image'],
         onclick: function (info) {
-            var url = "http://www.google.com/searchbyimage?image_url=" + info.srcUrl;
-            sendMessageToTab({ "task": "openUrl", "url": url });
+            var params = { image_url: info.srcUrl };
+            var url = "http://www.google.com/searchbyimage?" + $.param(params);
+            openUrl(url);
         }
     }));
 }
