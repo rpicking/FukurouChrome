@@ -48,14 +48,12 @@ function parseEhentai(srcUrl, pageUrl, uid, apiUrl) {
 
 
 function parseTumblr(info, uid) {
-    console.log(info);
     var payload = {};
     var srcUrl = info.srcUrl;
-
+    //console.log(info);
     if (info.hasOwnProperty("linkUrl")) {
         if (info.linkUrl.indexOf("dashboard") === -1) { // not clicking on a modal on dashboard
             check_if_file(info.linkUrl).then(function (isFile) {
-
                 srcUrl = info.linkUrl;
                 if (!isFile) {  // larger file modal
                     var larger_image = $('a[href="' + info.linkUrl + '"]').attr('data-big-photo');
@@ -64,14 +62,25 @@ function parseTumblr(info, uid) {
                     }
                     else {  // link is to page containing navigation header and image
                         // this type is only used on images (confirmation needed)
-                        $.get(info.linkUrl).then(data => {
-                            srcUrl = $(data).find("#content-image").attr('data-src');
-                            payload["srcUrl"] = srcUrl;
-                            payload["pageUrl"] = info.pageUrl;
-                            payload["uid"] = uid;
-                            send_dl_message(payload);
-                        });
-                        return;
+                        var urlSplit = srcUrl.split("/").pop();
+                        if (!urlSplit.match(/^\S+\.[a-zA-Z]{1,4}$/)) {   // modal non data-big-photo
+                            srcUrl = info.srcUrl;
+                        }
+                        else {
+                            $.get(info.linkUrl).then(data => {
+                                srcUrl = $(data).find("#content-image").attr('data-src');
+
+                                // no content-image tag page with image (enlargable) with menu bar at top (go back and notifications/follow)
+                                if (!srcUrl)
+                                    srcUrl = $(data).find("main img").attr('src');
+
+                                payload["srcUrl"] = srcUrl;
+                                payload["pageUrl"] = info.pageUrl;
+                                payload["uid"] = uid;
+                                send_dl_message(payload);
+                            });
+                            return;
+                        }
                     }
                 }
                 payload["srcUrl"] = srcUrl;
@@ -91,12 +100,31 @@ function parseTumblr(info, uid) {
         });
         return;
     }
+
+    // video on dashboard/page (not its own)
+    var video_parent = hovered.fromElement.parentElement;
+    var video = video_parent.getElementsByTagName("video")[0];
+    if (video) {
+        var source = video.getElementsByTagName("source")[0];
+        payload["poster"] = video.poster;
+        payload["srcUrl"] = source.src;
+        payload["pageUrl"] = info.pageUrl;
+        payload["uid"] = uid;
+        send_dl_message(payload);
+        return;
+    }
+
     // default
     payload["srcUrl"] = srcUrl;
     payload["pageUrl"] = info.pageUrl;
     payload["uid"] = uid;
     send_dl_message(payload);
 }
+
+window.onmouseover = function (e) {
+    hovered = e;
+};
+var hovered;
 
 
 function parsePixiv(info, uid) {
@@ -203,7 +231,6 @@ function send_dl_message(payload) {
     payload['cookie_domain'] = extractDomain(payload.pageUrl);
     payload['domain'] = window.location.hostname;
     payload['task'] = 'save';
-    //console.log(payload);
     chrome.runtime.sendMessage(payload, function (response) { });
 }
 
@@ -226,7 +253,7 @@ function extractDomain(url) {
 // MESSAGES FROM BACKGROUND PAGE
 chrome.runtime.onMessage.addListener(
     function (request, sender, sendResponse) {
-        console.log(request);
+        //console.log(request);
         sendResponse({ "status": "Received" });
         if (request.task === "download") {
             var pageUrl = request.info.pageUrl;

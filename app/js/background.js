@@ -184,7 +184,6 @@ function createMenu(folder, uid) {
         title: "Add to: " + folder,
         contexts: ["all"],
         onclick: function (info) {
-            //console.log(info);
             processDownload(info, uid);
         }
     });
