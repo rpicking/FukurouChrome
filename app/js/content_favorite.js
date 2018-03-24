@@ -5,6 +5,34 @@
 //}, true);
 
 
+function setupEhentai() {
+    // create flags
+    var style = document.createElement('style');
+    style.innerHTML = '.eh_flag {overflow: visible; position: absolute; height: 35px; top: 0px; right: 0px; }' +
+                        '.eh_flag_small {height: 23px; border-radius: 5px; margin-left: 6px; position: relative;}' +
+                        '.itd {position: relative}' +
+                        '.it5 a {overflow: hidden; max-width: 652px; max-height: 30px; white-space: nowrap; text-overflow: ellipsis; display: block;}' +
+                        '.gtr0 .it5 a:hover {overflow: visible; white-space: normal; position: absolute; max-height: auto; max-width: 786px; z-index: 99999; background-color: #4f535b;}' +
+                        '.gtr1 .it5 a:hover {overflow: visible; white-space: normal; position: absolute; max-height: auto; max-width: 786px; z-index: 99999; background-color: #363940;}';
+
+    document.head.appendChild(style);
+    placeFlags(["gtr0", "gtr1", "id1"], eh_api_url);
+    
+    // last item in gallery returns to gallery page
+    var cur_url = window.location.href;
+    $('#i1').on('click', '#next, #i3 a', function (event) {
+        event.preventDefault();
+
+        var nextItem = document.getElementById("i3").getElementsByTagName("a")[0];
+        if (cur_url === nextItem.href) {
+            var gal_url = document.getElementById("i5").getElementsByTagName("a")[0].href;
+            window.location.href = gal_url;
+        }
+        else cur_url = window.location.href;
+    });
+}
+
+
 function parseEhentai(srcUrl, pageUrl, uid, apiUrl) {
     var results = [];
     var galleryUrl = "";
@@ -502,37 +530,31 @@ function placeFlag(e, language) {
 }
 
 
-function start() {
+var eh_api_url = "https://e-hentai.org/api.php";
+var ex_api_url = "https://exhentai.org/api.php";
+
+
+
+$(document).ready(function () {
     var url = document.URL;
     if (url.indexOf("e-hentai.org") > -1) {
+        setupEhentai();
+
+        // redirect to ex based on setting
         chrome.storage.local.get(null, function (item) {
             if (item.redirectEH) {
                 redirectEH(item, url);
             }
         });
-
-        placeFlags(["gtr0", "gtr1", "id1"], eh_api_url);
         return;
     }
     else if (url.indexOf("exhentai.org") > -1) {
-        placeFlags(["gtr0", "gtr1", "id1"], ex_api_url);
+        setupEhentai();
         return;
     }
-}
 
 
-var eh_api_url = "https://e-hentai.org/api.php";
-var ex_api_url = "https://exhentai.org/api.php";
-var style = document.createElement('style');
-style.innerHTML = '.eh_flag {overflow: visible; position: absolute; height: 35px; top: 0px; right: 0px; }' +
-                    '.eh_flag_small {height: 23px; border-radius: 5px; margin-left: 6px; position: relative;}' +
-                    '.itd {position: relative}' +
-                    '.it5 a {overflow: hidden; max-width: 652px; max-height: 30px; white-space: nowrap; text-overflow: ellipsis; display: block;}' +
-                    '.gtr0 .it5 a:hover {overflow: visible; white-space: normal; position: absolute; max-height: auto; max-width: 786px; z-index: 99999; background-color: #4f535b;}' +
-                    '.gtr1 .it5 a:hover {overflow: visible; white-space: normal; position: absolute; max-height: auto; max-width: 786px; z-index: 99999; background-color: #363940;}';
-document.head.appendChild(style);
 
-$(document).ready(function () {
     // tumblr video volume control
     // get all iframes
     // send request getting document for iframes
@@ -540,4 +562,4 @@ $(document).ready(function () {
     // on play show volume 
 });
 
-start();
+
