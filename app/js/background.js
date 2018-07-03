@@ -1,13 +1,13 @@
 // listen for click on notification popup
-chrome.notifications.onClicked.addListener(function (id) {
+chrome.notifications.onClicked.addListener(function(id) {
     if (notificationId === id) {
         chrome.tabs.create({ url: notificationUrl });
     }
 });
 
 // listen for messages from other scripts
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    //console.log(request);
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+    console.log(request);
     switch (request.task) {
         case "save":
             sendDownload(request, sender.tab.id);
@@ -33,28 +33,28 @@ cookies: cookies from domain
 */
 function sendDownload(payload, tab_id) {
     var cookies = [];
-    chrome.cookies.getAll({ 'url': payload.cookie_domain }, function (sitecookies) {
+    chrome.cookies.getAll({ url: payload.cookie_domain }, function(sitecookies) {
         var cookieslength = sitecookies.length;
         for (var i = 0; i < cookieslength; ++i) {
             cookies.push([sitecookies[i].name, sitecookies[i].value]);
         }
         payload.cookies = cookies;
-        delete payload.cookie_domain;  // dont need to send domain to host
+        delete payload.cookie_domain; // dont need to send domain to host
 
-        chrome.tabs.get(tab_id, function (tab) {
-            payload['favicon_url'] = tab.favIconUrl;
+        chrome.tabs.get(tab_id, function(tab) {
+            payload["favicon_url"] = tab.favIconUrl;
             sendMessage(payload);
         });
     });
 }
 
 function connectPort() {
-    console.log("launching messenger")
-    port = chrome.runtime.connectNative('vangard.fukurou.ext.msg');
-    port.onDisconnect.addListener(function () {
+    console.log("launching messenger");
+    port = chrome.runtime.connectNative("vangard.fukurou.ext.msg");
+    port.onDisconnect.addListener(function() {
         port = null;
     });
-    port.onMessage.addListener(function (msg) {
+    port.onMessage.addListener(function(msg) {
         receiveMessage(msg);
     });
 }
@@ -65,22 +65,24 @@ Sent messages must have task key
 Response must include task and type keys
     task = task of original message
     type = success, failure, or crash
-*/    
+*/
+
 function receiveMessage(response) {
     //console.log("Message Received:");
     //console.log(response);
     switch (response.task) {
-        case 'sync':    // --- SYNC ---
+        case "sync": // --- SYNC ---
             //console.log(response);
             localStorage.folders = JSON.stringify(response.folders);
 
-            //clean "old" menus
+            // remove existing folders from context menu
             folders = response.folders;
             var menuLength = activeMenus.length;
             for (var i = 0; i < menuLength; ++i) {
                 chrome.contextMenus.remove(activeMenus[i]);
             }
 
+            // add current folders to context menu
             activeMenus = [];
             for (var i = 0; i < response.folders.length; ++i) {
                 createMenu(response.folders[i].name, response.folders[i].uid);
@@ -88,83 +90,85 @@ function receiveMessage(response) {
             createDefaultMenus();
             break;
 
-        case 'edit':    // --- EDIT ---
+        case "edit": // --- EDIT ---
             if (response.type === "success") {
                 status = "";
-                sendMessage({ 'task': 'sync' });
-            }
-            else {
+                sendMessage({ task: "sync" });
+            } else {
                 status = "failure";
-                console.log('edit failure');
+                console.log("edit failure");
                 console.log(response);
             }
             break;
 
-        case 'delete':  // --- DELETE ---
+        case "delete": // --- DELETE ---
             var opt = {
                 type: "basic",
                 title: "Fukurou Downloader",
                 message: "",
-                iconUrl: "img/icon-512.png",
-            }
+                iconUrl: "img/icon-512.png"
+            };
 
             if (response.type === "success") {
-                sendMessage({ 'task': 'sync' });
+                sendMessage({ task: "sync" });
 
-                opt.message = 'Successfully deleted folder "' + response.name + '" with uid: ' + response.uid;
+                opt.message =
+                    'Successfully deleted folder "' +
+                    response.name +
+                    '" with uid: ' +
+                    response.uid;
                 opt.isClickable = false;
                 chrome.notifications.create(opt);
-                var audio = new Audio('audio/success-chime.mp3');
+                var audio = new Audio("audio/success-chime.mp3");
                 audio.play();
-            }
-            else {
+            } else {
                 opt.message = "Failed to delete folder";
                 chrome.notifications.create(opt);
-                var audio = new Audio('audio/error-chime.wav');
+                var audio = new Audio("audio/error-chime.wav");
                 audio.play();
-                console.log('delete failure');
+                console.log("delete failure");
                 console.log(response);
             }
             break;
-
-        case 'save':    // --- SAVE ---
+        // currently unused
+        case "save": // --- SAVE ---
             var opt = {
                 type: "basic",
                 title: "Fukurou Downloader",
                 message: "",
-                iconUrl: "img/icon-512.png",
-            }
+                iconUrl: "img/icon-512.png"
+            };
 
-            if (response.type === 'success') {
+            if (response.type === "success") {
                 notificationUrl = response.pageUrl;
 
                 opt.message = response.filename + " added to " + response.folder;
                 opt.isClickable = true;
-                chrome.notifications.create(opt, function (id) {
+                chrome.notifications.create(opt, function(id) {
                     notificationId = id;
                 });
-                var audio = new Audio('audio/success-chime.mp3');
+                var audio = new Audio("audio/success-chime.mp3");
                 audio.play();
-            }
-            else {  // download failed
+            } else {
+                // download failed
                 opt.message = "File failed to download. Reason: " + response.type;
                 chrome.notifications.create(opt);
-                var audio = new Audio('audio/error-chime.wav');
+                var audio = new Audio("audio/error-chime.wav");
                 audio.play();
             }
             break;
-        case 'resend':  // --- RESEND ---
+        case "resend": // --- RESEND ---
             console.log("RESENDING");
             response.task = response.type;
             delete response.type;
             sendMessage(response);
             break;
-        case 'none':
-            // do nothing 
+        case "none":
+            // do nothing
             break;
-            // --- DEFAULT ---
+        // --- DEFAULT ---
         default:
-            console.log('Task not implemented or present')
+            console.log("Task not implemented or present");
             console.log(response);
     }
 }
@@ -183,7 +187,8 @@ function createMenu(folder, uid) {
     var id = chrome.contextMenus.create({
         title: "Add to: " + folder,
         contexts: ["all"],
-        onclick: function (info) {
+        onclick: function(info) {
+            console.log(info);
             processDownload(info, uid);
         }
     });
@@ -193,15 +198,14 @@ function createMenu(folder, uid) {
 // folder: folder name that item will be downloaded to (setup in host)
 // send message to content script for further processing
 function processDownload(info, uid) {
-    sendMessageToTab({ "task": "download", "info": info, "uid": uid });
+    sendMessageToTab({ task: "download", info: info, uid: uid });
 }
 
 // send message to currently active tab
 function sendMessageToTab(payload) {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, payload, function (response) {
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, payload, function(response) {
             // do nothing because have specific method for catching all message to background
-
         });
     });
 }
@@ -209,11 +213,11 @@ function sendMessageToTab(payload) {
 // returns domain name from url
 function extractDomain(url) {
     var preIndex = url.indexOf("://") + 3;
-    var searchIndex = url.substring(preIndex).indexOf('/');
+    var searchIndex = url.substring(preIndex).indexOf("/");
     if (searchIndex > -1) {
         url = url.slice(0, preIndex + searchIndex);
     }
-    searchIndex = url.substring(preIndex).indexOf(':');
+    searchIndex = url.substring(preIndex).indexOf(":");
     if (searchIndex > -1) {
         url = url.slice(0, preIndex + searchIndex);
     }
@@ -227,15 +231,15 @@ function uploadWindows(openWindows) {
         for (var j = 0; j < openWindows[i].tabs.length; ++j) {
             var tab = openWindows[i].tabs[j];
             tabs.push({
-                "title": tab.title,
-                "url": tab.url
+                title: tab.title,
+                url: tab.url
             });
         }
         windows.push(tabs);
     }
     var jsonString = JSON.stringify(windows);
     chrome.storage.sync.clear();
-    chrome.storage.sync.set({ 'windows': jsonString });
+    chrome.storage.sync.set({ windows: jsonString });
 }
 
 // upload all open tab urls in window to sync
@@ -246,141 +250,158 @@ function uploadWindow(window) {
         var tab = window.tabs[i];
 
         tabs.push({
-            "title": tab.title,
-            "url": tab.url
+            title: tab.title,
+            url: tab.url
         });
     }
     windows.push(tabs);
 
     var jsonString = JSON.stringify(windows);
     chrome.storage.sync.clear();
-    chrome.storage.sync.set({ 'windows': jsonString });
+    chrome.storage.sync.set({ windows: jsonString });
 }
 
 // opens url in new tab/window/incognito based on setting
 function openUrl(url) {
-    chrome.storage.local.get('contextOpenType', function (item) {
-        if (item.contextOpenType == 1) {   // new tab
-            chrome.tabs.query({ "active": true, "currentWindow": true }, function (tabs) {
-                chrome.tabs.create({ "url": url, "index": tabs[0].index + 1});
+    chrome.storage.local.get("contextOpenType", function(item) {
+        if (item.contextOpenType == 1) {
+            // new tab
+            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+                chrome.tabs.create({ url: url, index: tabs[0].index + 1 });
             });
-        }
-        else if (item.contextOpenType == 2) {   // new window
-            chrome.windows.create({ "url": url, "focused": true});
-        }
-        else if (item.contextOpenType == 3) {   // new incognito window
-            chrome.windows.create({ "url": url, "focused": true, "incognito": true });
-        }
-        else {  // contextOpenType == 0 or not set
+        } else if (item.contextOpenType == 2) {
+            // new window
+            chrome.windows.create({ url: url, focused: true });
+        } else if (item.contextOpenType == 3) {
+            // new incognito window
+            chrome.windows.create({ url: url, focused: true, incognito: true });
+        } else {
+            // contextOpenType == 0 or not set
             window.location.href = request.url;
         }
     });
 }
 
 function createDefaultMenus() {
-    // manga processing 
-    chrome.contextMenus.create({ type: 'separator', contexts: ['all'], documentUrlPatterns: supportedSites });
+    // manga processing
+    chrome.contextMenus.create({
+        type: "separator",
+        contexts: ["all"],
+        documentUrlPatterns: supportedSites
+    });
 
-    activeMenus.push(chrome.contextMenus.create({
-        title: 'Download Manga',
-        contexts: ['all'],
-        documentUrlPatterns: supportedSites,
-        onclick: function (info) {
-            //console.log(info);
-            payload = {
-                "task": "saveManga",
-                "url": info.pageUrl
+    activeMenus.push(
+        chrome.contextMenus.create({
+            title: "Download Manga",
+            contexts: ["all"],
+            documentUrlPatterns: supportedSites,
+            onclick: function(info) {
+                //console.log(info);
+                payload = {
+                    task: "saveManga",
+                    url: info.pageUrl
+                };
+                sendMessage(payload);
             }
-            sendMessage(payload);
-        }
-    }));
-    
+        })
+    );
+
     // text searching
-    chrome.contextMenus.create({ type: 'separator', contexts: ['selection'] });
+    chrome.contextMenus.create({ type: "separator", contexts: ["selection"] });
 
-    activeMenus.push(chrome.contextMenus.create({
-        title: 'Sadpanda Search',
-        contexts: ['selection'],
-        onclick: function (info) {
-            console.log(info.selectionText);
+    activeMenus.push(
+        chrome.contextMenus.create({
+            title: "Sadpanda Search",
+            contexts: ["selection"],
+            onclick: function(info) {
+                console.log(info.selectionText);
 
-            //var url = 'https://exhentai.org/';
-            var params = {
-                "f_doujinshi": 1,
-                "f_manga": 1,
-                "f_artistcg": 1,
-                "f_gamecg": 1,
-                "f_western": 1,
-                "f_non-h": 1,
-                "f_imageset": 1,
-                "f_cosplay": 1,
-                "f_asianporn": 1,
-                "f_misc": 1,
-                "f_search": info.selectionText,
-                "f_sh": "on",
-                "f_apply": "Apply Filter"
+                //var url = 'https://exhentai.org/';
+                var params = {
+                    f_doujinshi: 1,
+                    f_manga: 1,
+                    f_artistcg: 1,
+                    f_gamecg: 1,
+                    f_western: 1,
+                    "f_non-h": 1,
+                    f_imageset: 1,
+                    f_cosplay: 1,
+                    f_asianporn: 1,
+                    f_misc: 1,
+                    f_search: info.selectionText,
+                    f_sh: "on",
+                    f_apply: "Apply Filter"
+                };
+
+                console.log(params);
+                var test = encodeURIComponent(JSON.stringify(params));
+                var url = "https://exhentai.org/?" + $.param(params);
+                openUrl(url);
             }
-
-            console.log(params);
-            var test = encodeURIComponent(JSON.stringify(params));
-            var url = 'https://exhentai.org/?' + $.param(params);
-            openUrl(url);
-        }
-    }));
-    activeMenus.push(chrome.contextMenus.create({
-        title: 'nhentai.net Search',
-        contexts: ['selection'],
-        onclick: function (info) {
-            
-            var params = { q: info.selectionText };
-            var url = 'https://nhentai.net/search/?' + $.param(params);
-            openUrl(url);
-        }
-    }));
-
+        })
+    );
+    activeMenus.push(
+        chrome.contextMenus.create({
+            title: "nhentai.net Search",
+            contexts: ["selection"],
+            onclick: function(info) {
+                var params = { q: info.selectionText };
+                var url = "https://nhentai.net/search/?" + $.param(params);
+                openUrl(url);
+            }
+        })
+    );
 
     // image searching
-    chrome.contextMenus.create({ type: 'separator', contexts: ['image'] });
+    chrome.contextMenus.create({ type: "separator", contexts: ["image"] });
 
-    activeMenus.push(chrome.contextMenus.create({
-        title: 'SauceNAO Search',
-        contexts: ['image'],
-        onclick: function (info) {
-            var params = {
-                db: 999,
-                url: info.srcUrl
-            };
-            var url = "http://saucenao.com/search.php?" + $.param(params);
-            openUrl(url);
-        }
-    }));
-    activeMenus.push(chrome.contextMenus.create({
-        title: 'IQDB Search',
-        contexts: ['image'],
-        onclick: function (info) {
-            var params = { url: info.srcUrl };
-            var url = "http://iqdb.org/?" + $.param(params);
-            openUrl(url);
-        }
-    }));
-    activeMenus.push(chrome.contextMenus.create({
-        title: 'TinEye Search',
-        contexts: ['image'],
-        onclick: function (info) {
-            var params = { url: info.srcUrl };
-            var url = "http://tineye.com/search/?" + $.param(params);
-            openUrl(url);
-        }
-    }));
-    activeMenus.push(chrome.contextMenus.create({
-        title: 'Google Image Search',
-        contexts: ['image'],
-        onclick: function (info) {
-            var params = { image_url: info.srcUrl };
-            var url = "http://www.google.com/searchbyimage?" + $.param(params);
-            openUrl(url);
-        }
-    }));
+    activeMenus.push(
+        chrome.contextMenus.create({
+            title: "SauceNAO Search",
+            contexts: ["image"],
+            onclick: function(info) {
+                var params = {
+                    db: 999,
+                    url: info.srcUrl
+                };
+                var url = "http://saucenao.com/search.php?" + $.param(params);
+                openUrl(url);
+            }
+        })
+    );
+    activeMenus.push(
+        chrome.contextMenus.create({
+            title: "IQDB Search",
+            contexts: ["image"],
+            onclick: function(info) {
+                var params = { url: info.srcUrl };
+                var url = "http://iqdb.org/?" + $.param(params);
+                openUrl(url);
+            }
+        })
+    );
+    activeMenus.push(
+        chrome.contextMenus.create({
+            title: "TinEye Search",
+            contexts: ["image"],
+            onclick: function(info) {
+                var params = { url: info.srcUrl };
+                var url = "http://tineye.com/search/?" + $.param(params);
+                openUrl(url);
+            }
+        })
+    );
+    activeMenus.push(
+        chrome.contextMenus.create({
+            title: "Google Image Search",
+            contexts: ["image"],
+            onclick: function(info) {
+                var params = { image_url: info.srcUrl };
+                var url = "http://www.google.com/searchbyimage?" + $.param(params);
+                openUrl(url);
+            }
+        })
+    );
 }
 
 function refreshTwitch() {
@@ -393,8 +414,8 @@ function init() {
 
     // connect to host messenger
     connectPort();
-    
-    sendMessage({ 'task': 'sync' });
+
+    sendMessage({ task: "sync" });
 }
 
 // -------------------------------------------------
@@ -409,7 +430,10 @@ var port = null;
 var activeMenus = [];
 var supportedSites = ["*://hentai.cafe/*"];
 
-var headers = { 'method': 'GET', 'headers': { 'Client-ID': 'b71k7vce5w1szw9joc08sdo4r19wqb1' } };
+var headers = {
+    method: "GET",
+    headers: { "Client-ID": "b71k7vce5w1szw9joc08sdo4r19wqb1" }
+};
 
 init();
 startTwitchMonitor();

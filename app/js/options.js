@@ -1,75 +1,76 @@
-
-(function () {
+(function() {
     //"use strict";
 
     var save;
 
     function saveSettings() {
-        var indicator = document.getElementById("saveSettings").getElementsByTagName("span")[0];
+        var indicator = document
+            .getElementById("saveSettings")
+            .getElementsByTagName("span")[0];
         indicator.classList.add("glyphicon", "glyphicon-refresh", "spinning");
 
         // redirect EHentai
         var redirectEH = document.getElementById("redirectEH").checked;
-        chrome.storage.local.get('redirectEH', function (item) {
+        chrome.storage.local.get("redirectEH", function(item) {
             if (redirectEH != item.redirectEH) {
-                chrome.storage.local.set({ 'redirectEH': redirectEH });
+                chrome.storage.local.set({ redirectEH: redirectEH });
             }
         });
         // redirect EH fjorded/removed Galleries/Images
         var redirectEH_un = document.getElementById("redirectEH_un").checked;
-        chrome.storage.local.get('redirectEH_un', function (item) {
+        chrome.storage.local.get("redirectEH_un", function(item) {
             if (redirectEH_g != item.redirectEH_un) {
-                chrome.storage.local.set({ 'redirectEH_un': redirectEH_un });
+                chrome.storage.local.set({ redirectEH_un: redirectEH_un });
             }
         });
         // redirect EH Galleries
         var redirectEH_g = document.getElementById("redirectEH_g").checked;
-        chrome.storage.local.get('redirectEH_g', function (item) {
+        chrome.storage.local.get("redirectEH_g", function(item) {
             if (redirectEH_g != item.redirectEH_g) {
-                chrome.storage.local.set({ 'redirectEH_g': redirectEH_g });
+                chrome.storage.local.set({ redirectEH_g: redirectEH_g });
             }
         });
         // redirect EH Images
         var redirectEH_i = document.getElementById("redirectEH_i").checked;
-        chrome.storage.local.get('redirectEH_i', function (item) {
+        chrome.storage.local.get("redirectEH_i", function(item) {
             if (redirectEH_i != item.redirectEH_i) {
-                chrome.storage.local.set({ 'redirectEH_i': redirectEH_i });
+                chrome.storage.local.set({ redirectEH_i: redirectEH_i });
             }
-        });        
+        });
         // redirect EH Settings
         var redirectEH_s = document.getElementById("redirectEH_s").checked;
-        chrome.storage.local.get('redirectEH_s', function (item) {
+        chrome.storage.local.get("redirectEH_s", function(item) {
             if (redirectEH_s != item.redirectEH_s) {
-                chrome.storage.local.set({ 'redirectEH_s': redirectEH_s });
+                chrome.storage.local.set({ redirectEH_s: redirectEH_s });
             }
         });
         // redirect EH Torrents
         var redirectEH_t = document.getElementById("redirectEH_t").checked;
-        chrome.storage.local.get('redirectEH_t', function (item) {
+        chrome.storage.local.get("redirectEH_t", function(item) {
             if (redirectEH_t != item.redirectEH_t) {
-                chrome.storage.local.set({ 'redirectEH_t': redirectEH_t });
+                chrome.storage.local.set({ redirectEH_t: redirectEH_t });
             }
         });
         // redirect EH Favorites
         var redirectEH_f = document.getElementById("redirectEH_f").checked;
-        chrome.storage.local.get('redirectEH_f', function (item) {
+        chrome.storage.local.get("redirectEH_f", function(item) {
             if (redirectEH_f != item.redirectEH_f) {
-                chrome.storage.local.set({ 'redirectEH_f': redirectEH_f });
+                chrome.storage.local.set({ redirectEH_f: redirectEH_f });
             }
         });
         // redirect EH My Galleries
         var redirectEH_my = document.getElementById("redirectEH_my").checked;
-        chrome.storage.local.get('redirectEH_my', function (item) {
+        chrome.storage.local.get("redirectEH_my", function(item) {
             if (redirectEH_my != item.redirectEH_my) {
-                chrome.storage.local.set({ 'redirectEH_my': redirectEH_my });
+                chrome.storage.local.set({ redirectEH_my: redirectEH_my });
             }
         });
 
         // Context Menu Opening Type
-        var contextOpenType = $('#contextOpeningDropdown option:selected').val();
-        chrome.storage.local.get('contextOpenType', function (item) {
+        var contextOpenType = $("#contextOpeningDropdown option:selected").val();
+        chrome.storage.local.get("contextOpenType", function(item) {
             if (contextOpenType != item.contextOpenType) {
-                chrome.storage.local.set({ 'contextOpenType': contextOpenType });
+                chrome.storage.local.set({ contextOpenType: contextOpenType });
             }
         });
 
@@ -80,30 +81,30 @@
             localStorage.username = username;
             chrome.extension.getBackgroundPage().start();
         }
-        
+
         // build name/order change message
         var edit_folders = [];
         var folders = chrome.extension.getBackgroundPage().folders;
-        
+
         $("#folderList").sortable("refreshPositions");
         var idsInOrder = $("#folderList").sortable("toArray");
 
-        loop1:
-        for (var i = 0; i < idsInOrder.length; ++i) {
+        loop1: for (var i = 0; i < idsInOrder.length; ++i) {
             var uid = idsInOrder[i].replace("item-", "");
-            var new_name = document.getElementById(idsInOrder[i]).getElementsByTagName("div")[0].innerText;
+            var new_name = document
+                .getElementById(idsInOrder[i])
+                .getElementsByTagName("div")[0].innerText;
 
-            loop2:
-            for (var j = 0; j < folders.length; ++j) {
+            loop2: for (var j = 0; j < folders.length; ++j) {
                 if (uid === folders[j].uid) {
-                    var tmp = { 'uid': uid };
+                    var tmp = { uid: uid };
                     var push_check = false;
                     if (new_name != folders[j].name) {
-                        tmp['name'] = new_name;
+                        tmp["name"] = new_name;
                         push_check = true;
                     }
                     if (i != j) {
-                        tmp['order'] = i + 1;   // ordering starts at 1 not 0 in db FIXME
+                        tmp["order"] = i + 1; // ordering starts at 1 not 0 in db FIXME
                         push_check = true;
                     }
                     if (push_check) {
@@ -114,22 +115,22 @@
             }
         }
         if (edit_folders.length === 0) {
-            setTimeout(function () {
+            setTimeout(function() {
                 indicator.classList.remove("spinning", "glyphicon-refresh");
                 indicator.classList.add("glyphicon-ok");
-                setTimeout(function () {
+                setTimeout(function() {
                     indicator.classList.remove("glyphicon-ok", "glyphicon");
                 }, 4000);
             }, 1000);
-            return
+            return;
         }
 
         var payload = {
-            "task": "edit",
-            "folders": JSON.stringify(edit_folders)
+            task: "edit",
+            folders: JSON.stringify(edit_folders)
         };
         sendMessage(payload);
-        
+
         checkStatus("edit");
     }
 
@@ -139,8 +140,7 @@
         var hostStatus = document.getElementById("hostStatus");
         if (chrome.extension.getBackgroundPage().port === null) {
             hostStatus.classList.add("glyphicon", "glyphicon-remove");
-        }
-        else {
+        } else {
             hostStatus.classList.add("glyphicon", "glyphicon-ok");
         }
 
@@ -153,46 +153,45 @@
         }
 
         // redirect from EH
-        chrome.storage.local.get(null, function (item) {
+        chrome.storage.local.get(null, function(item) {
             if (item.redirectEH) {
-                document.getElementById('redirectEH').click();
+                document.getElementById("redirectEH").click();
                 // redirect fjorded/removed galleries/images
                 if (item.redirectEH_un) {
-                    document.getElementById('redirectEH_un').click();
+                    document.getElementById("redirectEH_un").click();
                 }
                 // redirect EH Galleries
                 if (item.redirectEH_g) {
-                    document.getElementById('redirectEH_g').click();
+                    document.getElementById("redirectEH_g").click();
                 }
                 // redirect EH Images
                 if (item.redirectEH_i) {
-                    document.getElementById('redirectEH_i').click();
+                    document.getElementById("redirectEH_i").click();
                 }
                 // redirect EH Settings
                 if (item.redirectEH_s) {
-                    document.getElementById('redirectEH_s').click();
+                    document.getElementById("redirectEH_s").click();
                 }
                 // redirect EH Torrents
                 if (item.redirectEH_t) {
-                    document.getElementById('redirectEH_t').click();
+                    document.getElementById("redirectEH_t").click();
                 }
                 // redirect EH Favorites
                 if (item.redirectEH_f) {
-                    document.getElementById('redirectEH_f').click();
+                    document.getElementById("redirectEH_f").click();
                 }
                 // redirect EH My Galleries
                 if (item.redirectEH_my) {
-                    document.getElementById('redirectEH_my').click();
+                    document.getElementById("redirectEH_my").click();
                 }
             }
 
             if (item.contextOpenType) {
-                $('select[name=contextOpening]').val(item.contextOpenType);
+                $("select[name=contextOpening]").val(item.contextOpenType);
                 //$('.selectpicker').selectpicker('refresh');
             }
         });
 
-        
         // setup save button
         save = document.getElementById("saveSettings");
         save.onclick = saveSettings;
@@ -200,71 +199,80 @@
         // populate list with folders
         var folders = chrome.extension.getBackgroundPage().folders;
         for (var i = 0; i < folders.length; ++i) {
-            addElement(folders[i]['name'], folders[i]['uid']);
+            addElement(folders[i]["name"], folders[i]["uid"]);
         }
     }
-    
+
     start();
-}());
+})();
 
 // global variables
 var curName = null;
 
 $("#folderList").sortable({
     cancel: ".fixed",
-    axis: 'y'
+    axis: "y"
 });
 
 // activate tabs
-$('#main-region a').click(function (e) {
-    e.preventDefault()
-    $(this).tab('show')
-})
-
-// activate tooltips
-$('span').tooltip();
-
-// As you are using jQuery 1.6 'live' allows you to bind events to elements that do not exist yet
-$('body').on('click', '.delete', function () {
-    var uid = $(this).parent()[0].id.replace("item-", "");
-    edit_folders = [];
-    edit_folders.push({ 'uid': uid });
-    payload = {
-        'task': 'delete',
-        'folders': JSON.stringify(edit_folders)
-    }
-    sendMessage(payload);
-    $(this).parent().remove();
+$("#main-region a").click(function(e) {
+    e.preventDefault();
+    $(this).tab("show");
 });
 
-$(document).keypress(function (e) {
+// activate tooltips
+$("span").tooltip();
+
+// As you are using jQuery 1.6 'live' allows you to bind events to elements that do not exist yet
+$("body").on("click", ".delete", function() {
+    var uid = $(this)
+        .parent()[0]
+        .id.replace("item-", "");
+    edit_folders = [];
+    edit_folders.push({ uid: uid });
+    payload = {
+        task: "delete",
+        folders: JSON.stringify(edit_folders)
+    };
+    sendMessage(payload);
+    $(this)
+        .parent()
+        .remove();
+});
+
+$(document).keypress(function(e) {
     var input = document.getElementsByClassName("editItem");
     if (e.which == 13 && input.length > 0) {
         input[0].blur();
     }
 });
 
-$('body').on('blur', '.editItem', closeInput);
-$('body').on('dblclick', '.item', function () {
+$("body").on("blur", ".editItem", closeInput);
+$("body").on("dblclick", ".item", function() {
     editItem(this);
 });
 
-document.getElementById("redirectEH").addEventListener("click", function () {
-    toggleSub(this, 'on-redirectEH');
+document.getElementById("redirectEH").addEventListener("click", function() {
+    toggleSub(this, "on-redirectEH");
 });
-
 
 function toggleSub(evt, subToggle, ignored) {
     if (!ignored) {
         ignored = [];
     }
 
-    $('.' + subToggle).each(function () {
-        if (!ignored.includes($(this).find('input').attr('id'))) {
-            if ($(this).css("display") === 'none') {
-                $(this).css('display', 'block');
+    $("." + subToggle).each(function() {
+        if (
+            !ignored.includes(
+                $(this)
+                    .find("input")
+                    .attr("id")
+            )
+        ) {
+            if ($(this).css("display") === "none") {
+                $(this).css("display", "block");
             } else {
-                $(this).css('display', 'none');
+                $(this).css("display", "none");
             }
         }
     });
@@ -285,32 +293,35 @@ function checkStatus(payload) {
 function statusLoop() {
     var status = chrome.extension.getBackgroundPage().status;
     if (status === "") {
-        var indicator = document.getElementById("saveSettings").getElementsByTagName("span")[0];
+        var indicator = document
+            .getElementById("saveSettings")
+            .getElementsByTagName("span")[0];
         indicator.classList.remove("spinning", "glyphicon-refresh");
         indicator.classList.add("glyphicon-ok");
-        setTimeout(function () {
+        setTimeout(function() {
             indicator.classList.remove("glyphicon-ok", "glyphicon");
         }, 4000);
         return;
-    }
-    else if(status === "failure") {
+    } else if (status === "failure") {
         chrome.extension.getBackgroundPage().status = "";
-        var indicator = document.getElementById("saveSettings").getElementsByTagName("span")[0];
+        var indicator = document
+            .getElementById("saveSettings")
+            .getElementsByTagName("span")[0];
         indicator.classList.remove("spinning", "glyphicon-refresh");
         indicator.classList.add("glyphicon-remove");
-        setTimeout(function () {
+        setTimeout(function() {
             indicator.classList.remove("glyphicon-remove", "glyphicon");
         }, 3000);
         return;
     }
-    setTimeout(function () {
+    setTimeout(function() {
         statusLoop();
     }, 1000);
 }
 
 function sendMessage(payload) {
     console.log(payload);
-    chrome.runtime.sendMessage(payload, function (response) {});
+    chrome.runtime.sendMessage(payload, function(response) {});
 }
 
 // "sets" input into list item and if different send message to background to change
@@ -340,7 +351,7 @@ function addElement(name, uid, position) {
     var listItems = list.getElementsByTagName("li");
     var li = document.createElement("li");
 
-    position = position || listItems.length + 1;    // position defaults to end of list
+    position = position || listItems.length + 1; // position defaults to end of list
 
     li.id = "item-" + uid;
     li.className = "ui-state-default vcenter item";
