@@ -84,10 +84,18 @@ function parseTumblr(info, uid) {
         // not in an iframe
         if (!image.length) {
             image = hovered.path[0];
+        } else {
+            image = image[0];
         }
 
-        pageUrl = image.getAttribute("data-pin-url");
-        payload["title"] = image.getAttribute("data-pin-description");
+        var pin_url = image.getAttribute("data-pin-url");
+        if (pin_url) {
+            pageUrl = pin_url;
+        }
+        var title = image.getAttribute("data-pin-description");
+        if (title) {
+            payload["title"] = title;
+        }
 
         // not clicking on a modal on dashboard
         if (info.linkUrl.indexOf("dashboard") === -1) {
@@ -150,16 +158,18 @@ function parseTumblr(info, uid) {
     }
 
     // video on dashboard/page (not its own)
-    var video_parent = hovered.fromElement.parentElement;
-    var video = video_parent.getElementsByTagName("video")[0];
-    if (video) {
-        var source = video.getElementsByTagName("source")[0];
-        payload["poster"] = video.poster;
-        payload["srcUrl"] = source.src;
-        payload["pageUrl"] = pageUrl;
-        payload["uid"] = uid;
-        send_dl_message(payload);
-        return;
+    if (hovered.fromElement) {
+        var video_parent = hovered.fromElement.parentElement;
+        var video = video_parent.getElementsByTagName("video")[0];
+        if (video) {
+            var source = video.getElementsByTagName("source")[0];
+            payload["poster"] = video.poster;
+            payload["srcUrl"] = source.src;
+            payload["pageUrl"] = pageUrl;
+            payload["uid"] = uid;
+            send_dl_message(payload);
+            return;
+        }
     }
 
     // default
@@ -298,6 +308,9 @@ function send_req(apiUrl, data) {
 
 // Sends required download info back to background for passing to host
 function send_dl_message(payload) {
+    hovered = null;
+    console.log(payload);
+
     payload["cookie_domain"] = extractDomain(payload.pageUrl);
     payload["domain"] = window.location.hostname;
     payload["task"] = "save";
