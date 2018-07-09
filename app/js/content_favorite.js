@@ -78,77 +78,85 @@ function parseTumblr(info, uid) {
     var payload = {};
     var srcUrl = info.srcUrl;
     var pageUrl = info.pageUrl;
-    //console.log(info);
+    console.log(info);
+
     if (info.hasOwnProperty("linkUrl")) {
-        var image = $('*[src="' + info.srcUrl + '"]');
-        // not in an iframe
-        if (!image.length) {
-            image = hovered.path[0];
-        } else {
-            image = image[0];
-        }
+        link_parts = info.linkUrl.split("/");
+        link_type = link_parts[link_parts.length - 2];
+        if (link_type !== "post") {
+            var image = $('*[src="' + info.srcUrl + '"]');
 
-        var pin_url = image.getAttribute("data-pin-url");
-        if (pin_url) {
-            pageUrl = pin_url;
-        }
-        var title = image.getAttribute("data-pin-description");
-        if (title) {
-            payload["title"] = title;
-        }
+            // not in an iframe
+            if (!image.length) image = hovered.path[0];
+            else image = image[0];
 
-        // not clicking on a modal on dashboard
-        if (info.linkUrl.indexOf("dashboard") === -1) {
-            check_if_file(info.linkUrl).then(function(isFile) {
-                srcUrl = info.linkUrl;
-                if (!isFile) {
-                    // larger file modal
-                    var larger_image = $('a[href="' + info.linkUrl + '"]').attr(
-                        "data-big-photo"
-                    );
-                    if (larger_image) {
-                        srcUrl = larger_image;
-                    } else {
-                        // link is to page containing navigation header and image
-                        // this type is only used on images (confirmation needed)
-                        var urlSplit = srcUrl.split("/").pop();
-                        if (urlSplit.match(/^\S+\.[a-zA-Z0-9]{1,4}$/)) {
-                            // modal non data-big-photo
-                            srcUrl = info.srcUrl;
+            var pin_url = image.getAttribute("data-pin-url");
+            if (pin_url) {
+                pageUrl = pin_url;
+            }
+            var title = image.getAttribute("data-pin-description");
+            if (title) {
+                payload["title"] = title;
+            }
+
+            // not clicking on a modal on dashboard
+            if (info.linkUrl.indexOf("dashboard") === -1) {
+                check_if_file(info.linkUrl).then(function(isFile) {
+                    srcUrl = info.linkUrl;
+                    if (!isFile) {
+                        // larger file modal
+                        var larger_image = $('a[href="' + info.linkUrl + '"]').attr(
+                            "data-big-photo"
+                        );
+                        if (larger_image) {
+                            srcUrl = larger_image;
                         } else {
-                            $.get(info.linkUrl).then(data => {
-                                srcUrl = $(data)
-                                    .find("#content-image")
-                                    .attr("data-src");
-
-                                // no content-image tag page with image (enlargable) with menu bar at top (go back and notifications/follow)
-                                if (!srcUrl) {
+                            // link is to page containing navigation header and image
+                            // this type is only used on images (confirmation needed)
+                            var urlSplit = srcUrl.split("/").pop();
+                            if (urlSplit.match(/^\S+\.[a-zA-Z0-9]{1,4}$/)) {
+                                // modal non data-big-photo
+                                srcUrl = info.srcUrl;
+                            } else {
+                                $.get(info.linkUrl).then(data => {
                                     srcUrl = $(data)
-                                        .find("main img")
-                                        .attr("src");
-                                }
+                                        .find("#content-image")
+                                        .attr("data-src");
 
-                                payload["srcUrl"] = srcUrl;
-                                payload["pageUrl"] = pageUrl;
-                                payload["uid"] = uid;
-                                send_dl_message(payload);
-                            });
-                            return;
+                                    // no content-image tag page with image (enlargable) with menu bar at top (go back and notifications/follow)
+                                    if (!srcUrl) {
+                                        srcUrl = $(data)
+                                            .find("main img")
+                                            .attr("src");
+                                    }
+
+                                    console.log("media with menu bar on top");
+                                    payload["srcUrl"] = srcUrl;
+                                    payload["pageUrl"] = pageUrl;
+                                    payload["uid"] = uid;
+                                    send_dl_message(payload);
+                                });
+                                return;
+                            }
                         }
                     }
-                }
-                payload["srcUrl"] = srcUrl;
-                payload["pageUrl"] = pageUrl;
-                payload["uid"] = uid;
-                send_dl_message(payload);
-            });
-            return;
+
+                    console.log("linkUrl is to file");
+                    payload["srcUrl"] = srcUrl;
+                    payload["pageUrl"] = pageUrl;
+                    payload["uid"] = uid;
+                    send_dl_message(payload);
+                });
+                return;
+            }
         }
     } else if (info.hasOwnProperty("frameUrl")) {
         $.get(info.frameUrl).then(data => {
             srcUrl = $(data)
                 .find("source")
                 .attr("src");
+
+            console.log("frameUrl");
             payload["srcUrl"] = srcUrl;
             payload["pageUrl"] = pageUrl;
             payload["uid"] = uid;
@@ -163,6 +171,8 @@ function parseTumblr(info, uid) {
         var video = video_parent.getElementsByTagName("video")[0];
         if (video) {
             var source = video.getElementsByTagName("source")[0];
+
+            console.log("video");
             payload["poster"] = video.poster;
             payload["srcUrl"] = source.src;
             payload["pageUrl"] = pageUrl;
@@ -173,6 +183,7 @@ function parseTumblr(info, uid) {
     }
 
     // default
+    console.log("default");
     payload["srcUrl"] = srcUrl;
     payload["pageUrl"] = pageUrl;
     payload["uid"] = uid;
@@ -309,7 +320,7 @@ function send_req(apiUrl, data) {
 // Sends required download info back to background for passing to host
 function send_dl_message(payload) {
     hovered = null;
-    console.log(payload);
+    //console.log(payload);
 
     payload["cookie_domain"] = extractDomain(payload.pageUrl);
     payload["domain"] = window.location.hostname;
