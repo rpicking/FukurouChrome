@@ -17,8 +17,9 @@
                     <img src="img/icon-512.png">
                 </div>
                 <div class="col-md-8 title">
-                    <span class="help-inline" title="" data-placement="bottom" data-toggle="tooltip" data-original-title="Connection status to download host"><span id="hostStatus" class=""></span></span>
-                    FUKUROU EXTENSION
+                    <span class="help-inline" title="" data-placement="bottom" data-toggle="tooltip" data-original-title="Connection status to download host">
+                        <span id="hostStatus" class=""></span>
+                    </span> FUKUROU EXTENSION
                 </div>
             </div>
         </div>
@@ -29,14 +30,24 @@
             <div class="container-fluid">
                 <div class="container-fluid" id="main-region">
                     <ul class="nav nav-tabs nav-justified settings-tabs">
-                        <li role="presentation" class="active"><a href="#Settings">Settings</a></li>
-                        <li role="presentation"><a href="#Favorites">Favorites</a></li>
-                        <li role="presentation"><a href="#History">History</a></li>
+                        <li role="presentation" class="active">
+                            <a href="#Settings">Settings</a>
+                        </li>
+                        <li role="presentation">
+                            <a href="#Favorites">Favorites</a>
+                        </li>
+                        <li role="presentation">
+                            <a href="#History">History</a>
+                        </li>
+                        <li role="presentation">
+                            <a href="#Scripts">Scripts</a>
+                        </li>
                     </ul>
 
                     <div class="row settings-controls">
                         <div class="col-sm-3 col-sm-offset-10 col-md-3 col-md-offset-11">
-                            <button class="btn btn-primary" id="saveSettings"><span class=""></span>Save</button>
+                            <button class="btn btn-primary" id="saveSettings">
+                                <span class=""></span>Save</button>
                         </div>
                     </div>
 
@@ -55,7 +66,9 @@
                                                         <div class="inputGroup">
                                                             <input class="toggle" type="checkbox" id="redirectEH">
                                                             <label class="toggleLabel" for="redirectEH"></label>
-                                                            <span class="help-inline" title="" data-toggle="tooltip" data-original-title="Automatically redirect certain subpages from e-hentai to exhentai"><i class="fa fa-question-circle fa-lg"></i></span>
+                                                            <span class="help-inline" title="" data-toggle="tooltip" data-original-title="Automatically redirect certain subpages from e-hentai to exhentai">
+                                                                <i class="fa fa-question-circle fa-lg"></i>
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -67,7 +80,9 @@
                                                             <div class="inputGroup">
                                                                 <input class="toggle" type="checkbox" id="redirectEH_un">
                                                                 <label class="toggleLabel" for="redirectEH_un"></label>
-                                                                <span class="help-inline" title="" data-toggle="tooltip" data-original-title="When selected, only redirects fjorded/removed galleries and images"><i class="fa fa-question-circle fa-lg"></i></span>
+                                                                <span class="help-inline" title="" data-toggle="tooltip" data-original-title="When selected, only redirects fjorded/removed galleries and images">
+                                                                    <i class="fa fa-question-circle fa-lg"></i>
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -80,7 +95,9 @@
                                                             <div class="inputGroup">
                                                                 <input class="toggle" type="checkbox" id="redirectEH_g">
                                                                 <label class="toggleLabel" for="redirectEH_g"></label>
-                                                                <span class="help-inline" title="" data-toggle="tooltip" data-original-title="Redirects all EH gallery pages to ex"><i class="fa fa-question-circle fa-lg"></i></span>
+                                                                <span class="help-inline" title="" data-toggle="tooltip" data-original-title="Redirects all EH gallery pages to ex">
+                                                                    <i class="fa fa-question-circle fa-lg"></i>
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -93,7 +110,9 @@
                                                             <div class="inputGroup">
                                                                 <input class="toggle" type="checkbox" id="redirectEH_i">
                                                                 <label class="toggleLabel" for="redirectEH_i"></label>
-                                                                <span class="help-inline" title="" data-toggle="tooltip" data-original-title="Redirects all EH individual image pages to Ex"><i class="fa fa-question-circle fa-lg"></i></span>
+                                                                <span class="help-inline" title="" data-toggle="tooltip" data-original-title="Redirects all EH individual image pages to Ex">
+                                                                    <i class="fa fa-question-circle fa-lg"></i>
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -177,7 +196,7 @@
                                                 <div class="vcenter settingGroup">
                                                     <label class="col-sm-2 control-label">Twitch.TV Username</label>
                                                     <div class="col-sm-4">
-                                                        <input type="text" id ="twitch-username" name="twitch-username" class="form-control">
+                                                        <input type="text" id="twitch-username" name="twitch-username" class="form-control">
                                                     </div>
                                                 </div>
                                             </fieldset>
@@ -205,11 +224,14 @@
                         <div class="tab-pane" id="History">
                             <h3>Placeholder for FukurouViewer history integration (currently only available in application)</h3>
                         </div>
+                        <div class="tab-pane" id="Scripts">
+                            <input id="content-scripts" type="file" name="content-scripts[]" multiple/>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>   
+    </div>
 
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
@@ -217,4 +239,5 @@
     <script src="js/options.js"></script>
 
 </body>
+
 </html>

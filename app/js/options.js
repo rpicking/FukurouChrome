@@ -252,6 +252,32 @@ $("body").on("dblclick", ".item", function() {
     editItem(this);
 });
 
+document
+    .getElementById("content-scripts")
+    .addEventListener("change", handleFileSelect, false);
+
+// document.getElementById("content-script").addEventListener("input", function() {
+//     console.log(file);
+// });
+
+function handleFileSelect(evt) {
+    var files = evt.target.files;
+    // files is a FileList of File objects. List some properties.
+    for (var i = 0, f; (f = files[i]); i++) {
+        console.log(f);
+        var reader = new FileReader();
+
+        // Closure to capture the file information.
+        reader.onload = (function(theFile) {
+            return function(e) {};
+        })(f);
+        reader.onloadend = function() {
+            console.log(reader.result);
+        };
+        reader.readAsText(f);
+    }
+}
+
 document.getElementById("redirectEH").addEventListener("click", function() {
     toggleSub(this, "on-redirectEH");
 });

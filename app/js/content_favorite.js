@@ -344,7 +344,7 @@ function extractDomain(url) {
 
 // MESSAGES FROM BACKGROUND PAGE
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    //console.log(request);
+    console.log(request);
     sendResponse({ status: "Received" });
     if (request.task === "download") {
         var pageUrl = request.info.pageUrl;

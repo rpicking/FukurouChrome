@@ -261,13 +261,48 @@ function uploadWindow(window) {
     chrome.storage.sync.set({ windows: jsonString });
 }
 
+// Listener waiting for new tab to be complete
+// if tabid is in popupImage array then sendmessage to open image
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+    if (changeInfo.status != "complete") return;
+
+    for (var i = 0; i < popupImages.length; ++i) {
+        if (tabId == popupImages[i].id && !popupImages[i].middleman) {
+            chrome.tabs.sendMessage(tabId, {
+                task: "popupImage",
+                url: popupImages[i].url
+            });
+            popupImages.splice(i, 1);
+            return;
+        }
+    }
+});
+
 // opens url in new tab/window/incognito based on setting
-function openUrl(url) {
+function openUrl(url, srcUrl) {
     chrome.storage.local.get("contextOpenType", function(item) {
         if (item.contextOpenType == 1) {
             // new tab
             chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-                chrome.tabs.create({ url: url, index: tabs[0].index + 1 });
+                chrome.tabs.create({ url: url, index: tabs[0].index + 1 }, function(tab) {
+                    if (!srcUrl) {
+                        // find item
+                        for (var i = 0; i < popupImages.length; ++i) {
+                            // change tabid
+                            if (popupImages[i].id === tabs[0].id) {
+                                popupImages[i].id = tab.id;
+                                popupImages[i].middleman = false;
+                                break;
+                            }
+                        }
+                    } else {
+                        popupImages.push({
+                            id: tab.id,
+                            url: srcUrl,
+                            middleman: true
+                        });
+                    }
+                });
             });
         } else if (item.contextOpenType == 2) {
             // new window
@@ -336,7 +371,7 @@ function createDefaultMenus() {
                 console.log(params);
                 var test = encodeURIComponent(JSON.stringify(params));
                 var url = "https://exhentai.org/?" + $.param(params);
-                openUrl(url);
+                openUrl(url, false);
             }
         })
     );
@@ -347,7 +382,7 @@ function createDefaultMenus() {
             onclick: function(info) {
                 var params = { q: info.selectionText };
                 var url = "https://nhentai.net/search/?" + $.param(params);
-                openUrl(url);
+                openUrl(url, false);
             }
         })
     );
@@ -365,7 +400,7 @@ function createDefaultMenus() {
                     url: info.srcUrl
                 };
                 var url = "http://saucenao.com/search.php?" + $.param(params);
-                openUrl(url);
+                openUrl(url, info.srcUrl);
             }
         })
     );
@@ -376,7 +411,7 @@ function createDefaultMenus() {
             onclick: function(info) {
                 var params = { url: info.srcUrl };
                 var url = "http://iqdb.org/?" + $.param(params);
-                openUrl(url);
+                openUrl(url, info.srcUrl);
             }
         })
     );
@@ -387,7 +422,7 @@ function createDefaultMenus() {
             onclick: function(info) {
                 var params = { url: info.srcUrl };
                 var url = "http://tineye.com/search/?" + $.param(params);
-                openUrl(url);
+                openUrl(url, info.srcUrl);
             }
         })
     );
@@ -398,7 +433,7 @@ function createDefaultMenus() {
             onclick: function(info) {
                 var params = { image_url: info.srcUrl };
                 var url = "http://www.google.com/searchbyimage?" + $.param(params);
-                openUrl(url);
+                openUrl(url, info.srcUrl);
             }
         })
     );
@@ -429,6 +464,7 @@ var status = "";
 var port = null;
 var activeMenus = [];
 var supportedSites = ["*://hentai.cafe/*"];
+var popupImages = [];
 
 var headers = {
     method: "GET",

@@ -1,41 +1,40 @@
 {
-  "manifest_version": 2,
+    "manifest_version": 2,
 
-  "name": "Fukurou",
-  "description": "Extension for displaying a users followed online streams, and other misc.",
-  "version": "0.6.5",
+    "name": "Fukurou",
+    "description":
+        "Extension for displaying a users followed online streams, and other misc.",
+    "version": "0.6.5",
 
-  "background": {
-    "scripts": [ "js/jquery.min.js", "js/twitchstreams.js", "js/background.js" ]
-  },
-  "options_page": "options.html",
-  "content_scripts": [
-    {
-      "matches": [ "<all_urls>" ],
-      "js": [ "js/jquery.min.js", "js/jquery-ui.min.js", "js/content_favorite.js" ],
-      "css": [ "css/jquery-ui.min.css", "css/font-awesome.min.css" ],
-      "run_at":  "document_end"
-    }],
-  "web_accessible_resources": [
-    "jquery-ui/images*.png",
-    "flags/*.svg"
-  ],
-  "icons": {
-    "16": "img/icon-16.png",
-    "512": "img/icon-512.png"
-  },
-  "permissions": [
-    "contextMenus",
-    "tabs",
-    "downloads",
-    "nativeMessaging",
-    "cookies",
-    "storage",
-    "notifications",
-    "<all_urls>"
-  ],
-  "browser_action": {
-    "default_icon": "img/icon.png",
-    "default_popup": "popup.html"
-  }
+    "background": {
+        "scripts": ["js/jquery.min.js", "js/twitchstreams.js", "js/background.js"]
+    },
+    "options_page": "options.html",
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["js/jquery.min.js", "js/jquery-ui.min.js", "js/content_favorite.js"],
+            "css": ["css/jquery-ui.min.css", "css/font-awesome.min.css"],
+            "run_at": "document_end"
+        }
+    ],
+    "web_accessible_resources": ["jquery-ui/images*.png", "flags/*.svg"],
+    "icons": {
+        "16": "img/icon-16.png",
+        "512": "img/icon-512.png"
+    },
+    "permissions": [
+        "contextMenus",
+        "tabs",
+        "downloads",
+        "nativeMessaging",
+        "cookies",
+        "storage",
+        "notifications",
+        "<all_urls>"
+    ],
+    "browser_action": {
+        "default_icon": "img/icon.png",
+        "default_popup": "popup.html"
+    }
 }
