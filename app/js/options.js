@@ -79,7 +79,7 @@
         var username = twitchnameInput.value;
         if (username != localStorage.username) {
             localStorage.username = username;
-            chrome.extension.getBackgroundPage().start();
+            chrome.runtime.sendMessage({task : "refresh_twitch"});
         }
 
         // build name/order change message

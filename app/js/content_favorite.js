@@ -190,34 +190,6 @@ function parseTumblr(info, uid) {
     send_dl_message(payload);
 }
 
-$(function() {
-    var frames = document.getElementsByTagName("iframe");
-    for (var i = 0; i < frames.length; ++i) {
-        id = frames[i].getAttribute("id");
-        if (id && id !== "ga_target") {
-            frames[i].contentWindow.document.addEventListener(
-                "contextmenu",
-                function(e) {
-                    hovered = e;
-                },
-                true
-            );
-        }
-    }
-
-    return;
-});
-
-document.addEventListener(
-    "contextmenu",
-    function(e) {
-        hovered = e;
-    },
-    true
-);
-
-var hovered;
-
 function parsePixiv(info, uid) {
     //console.log(info);
     var payload = {
@@ -243,6 +215,37 @@ function parsePixiv(info, uid) {
     } else {
         payload["srcUrl"] = info.srcUrl;
     }
+
+    send_dl_message(payload);
+}
+
+async function parseBooru(info, uid) {
+    srcUrl = info.srcUrl;
+
+    // check if tried to download sample (smaller version)
+    if (srcUrl.includes("samples")) {
+        var newSrcUrl = srcUrl.replace("sample_", "");
+        newSrcUrl = newSrcUrl.replace("samples", "images");
+
+        var response = await fetch(newSrcUrl);
+        var status = await response.status;
+
+        // check if full size exists if 404 then try replacing with
+        if (status == 200) srcUrl = newSrcUrl;
+        else if (status == 404) newSrcUrl = newSrcUrl.replace("jpg", "jpeg");
+
+        response = await fetch(newSrcUrl);
+        status = await response.status;
+
+        // if extension renamed full size exists set as src
+        if (status == 200) srcUrl = newSrcUrl;
+    }
+
+    var payload = {
+        pageUrl: info.pageUrl,
+        uid: uid,
+        srcUrl: srcUrl
+    };
 
     send_dl_message(payload);
 }
@@ -275,6 +278,25 @@ function parseTsumino(info, uid) {
         pageNum = ("000" + pageNum).substr(-3);
     }
     payload["filename"] = title + " - " + pageNum;
+    send_dl_message(payload);
+}
+
+function parseTwitter(info, uid) {
+    var srcUrl = info.srcUrl;
+
+    // in gallery
+    if (srcUrl === undefined) {
+        var mediaContainer = $('.Gallery-content .Gallery-media');
+        var content = mediaContainer.children()[0];
+        srcUrl = content.getAttribute("src");
+    }
+
+    var payload = {
+        pageUrl: info.pageUrl,
+        uid: uid,
+        srcUrl: srcUrl
+    };
+
     send_dl_message(payload);
 }
 
@@ -342,45 +364,83 @@ function extractDomain(url) {
     return url;
 }
 
+// **********************************************************************************************************************************
 // MESSAGES FROM BACKGROUND PAGE
+// **********************************************************************************************************************************
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     console.log(request);
     sendResponse({ status: "Received" });
     if (request.task === "download") {
         var pageUrl = request.info.pageUrl;
-        if (pageUrl.indexOf("exhentai.org") > -1) {
-            parseEhentai(
-                request.info.srcUrl,
-                request.info.pageUrl,
-                request.uid,
-                ex_api_url
-            );
-        } else if (pageUrl.indexOf("e-hentai.org") > -1) {
-            parseEhentai(request.srcUrl, request.pageUrl, request.uid, eh_api_url);
-        } else if (pageUrl.indexOf("tumblr.com") > -1) {
-            parseTumblr(request.info, request.uid);
-        } else if (pageUrl.indexOf("pixiv.net") > -1) {
-            parsePixiv(request.info, request.uid);
-        } else if (pageUrl.indexOf("tsumino.com") > -1) {
-            parseTsumino(request.info, request.uid);
-        } else {
-            // no custom processing
-            var payload = {};
-            if (request.info.hasOwnProperty("srcUrl")) {
-                payload["srcUrl"] = request.info.srcUrl;
-            } else {
-                if (request.info.hasOwnProperty("linkUrl")) {
-                    payload["srcUrl"] = request.info.linkUrl;
-                } else {
-                    payload["srcUrl"] = request.info.srcUrl;
-                }
+        var domain = pageUrl.replace('http://','').replace('https://','').replace('www.','').split(/[/?#]/)[0];
+
+        switch(domain) {
+            case "exhentai.org": {
+                parseEhentai(
+                    request.info.srcUrl,
+                    request.info.pageUrl,
+                    request.uid,
+                    ex_api_url
+                );
+                break;
             }
-            payload["pageUrl"] = request.info.pageUrl;
-            payload["uid"] = request.uid;
-            send_dl_message(payload);
+            case "e-hentai.org": {
+                parseEhentai(request.srcUrl, request.pageUrl, request.uid, eh_api_url);
+                break;
+            }                
+            case "tumblr.com": {
+                parseTumblr(request.info, request.uid);
+                break;
+            }
+            case "pixiv.net": {
+                parsePixiv(request.info, request.uid);
+                break;
+            }
+            case "tsumino.com": {
+                parseTsumino(request.info, request.uid);
+                break;
+            }
+            case "gelbooru.com":
+            case "rule34.xxx": {
+                parseBooru(request.info, request.uid);
+                break;
+            }
+            case "twitter.com": {
+                parseTwitter(request.info, request.uid);
+                break;
+            }
+            default: {
+                // no custom processing
+                var payload = {};
+                if (request.info.hasOwnProperty("srcUrl")) {
+                    payload["srcUrl"] = request.info.srcUrl;
+                } else {
+                    if (request.info.hasOwnProperty("linkUrl")) {
+                        payload["srcUrl"] = request.info.linkUrl;
+                    } else {
+                        payload["srcUrl"] = request.info.srcUrl;
+                    }
+                }
+                payload["pageUrl"] = pageUrl;
+                payload["uid"] = request.uid;
+                send_dl_message(payload);
+            }
         }
     }
 });
+// **********************************************************************************************************************************
+// MESSAGES FROM BACKGROUND PAGE
+// **********************************************************************************************************************************
+
+function urlInDomain(url) {
+    if (arguments.length <= 1) return false;
+
+    // loop through domains returning true if domain in url
+    for (var i = 1; i < arguments.length; ++i) {
+        if (url.indexOf(arguments[i]) > -1) return true;
+    }
+    return false;
+}
 
 // testing largest image
 function getMaxImage() {
@@ -602,6 +662,16 @@ function placeFlag(e, language) {
 var eh_api_url = "https://e-hentai.org/api.php";
 var ex_api_url = "https://exhentai.org/api.php";
 
+document.addEventListener(
+    "contextmenu",
+    function(e) {
+        hovered = e;
+    },
+    true
+);
+
+var hovered;
+
 $(document).ready(function() {
     var url = document.URL;
     if (url.indexOf("e-hentai.org") > -1) {
@@ -617,6 +687,21 @@ $(document).ready(function() {
     } else if (url.indexOf("exhentai.org") > -1) {
         setupEhentai();
         return;
+    } else if (url.indexOf("tumblr.com") > -1) {    // add hovering for iframes
+        if (window.location.hostname.indexOf("tumblr.com") === -1) return;
+        var frames = document.getElementsByTagName("iframe");
+        for (var i = 0; i < frames.length; ++i) {
+            id = frames[i].getAttribute("id");
+            if (id && id !== "ga_target") {
+                frames[i].contentWindow.document.addEventListener(
+                    "contextmenu",
+                    function(e) {
+                        hovered = e;
+                    },
+                    true
+                );
+            }
+        }
     }
 
     // tumblr video volume control

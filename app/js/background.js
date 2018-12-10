@@ -6,17 +6,49 @@ chrome.notifications.onClicked.addListener(function(id) {
 });
 
 // listen for messages from other scripts
-chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-    console.log(request);
+chrome.runtime.onMessage.addListener(async function(request, sender, sendResponse) {
+    console.log("From tab: ", request);
     switch (request.task) {
         case "save":
-            sendDownload(request, sender.tab.id);
+            request.favicon_url = await getFaviconUrl(sender.tab.id);
+            save_request(request);
+            break;
+        case "refresh_twitch":
+            refreshTwitch();
             break;
         default:
             sendMessage(request);
             break;
     }
 });
+
+chrome.storage.onChanged.addListener(function(changes, namespace) {
+    if (namespace !== "sync") return;
+
+    if (changes.hasOwnProperty("downloads")) {
+        var downloads = changes.downloads.newValue;
+        if (downloads !== undefined) {
+            for (var i = 0; i < downloads.length; ++i) {
+                console.log("Sending to downloads: ", downloads[i]);
+            }
+        }
+    }
+});
+
+function save_request(request) {
+    if (!checkPort()) {
+        console.log("Save for later")
+        chrome.storage.sync.get(["downloads"], async function(result) {
+            var downloads = result["downloads"] ? result["downloads"] : [];
+
+            downloads.push(request);
+            chrome.storage.sync.set({ downloads: downloads });
+        });
+        return;
+    }
+
+    sendDownload(request);
+}
 
 /*  
 Sends download url and optional parameters to fukurou host
@@ -31,9 +63,9 @@ comicPage: *OPTIONAL* page number of item
 artist: *OPTIONAL* artist/artists parent manga
 cookies: cookies from domain
 */
-function sendDownload(payload, tab_id) {
+function sendDownload(payload) {
     var cookies = [];
-    chrome.cookies.getAll({ url: payload.cookie_domain }, function(sitecookies) {
+    chrome.cookies.getAll({ url: payload.cookie_domain }, async function(sitecookies) {
         var cookieslength = sitecookies.length;
         for (var i = 0; i < cookieslength; ++i) {
             cookies.push([sitecookies[i].name, sitecookies[i].value]);
@@ -41,22 +73,38 @@ function sendDownload(payload, tab_id) {
         payload.cookies = cookies;
         delete payload.cookie_domain; // dont need to send domain to host
 
+        sendMessage(payload);
+    });
+}
+
+// returns current favicon_url for tab with id tab_id
+async function getFaviconUrl(tab_id) {
+    return new Promise(resolve => {
         chrome.tabs.get(tab_id, function(tab) {
-            payload["favicon_url"] = tab.favIconUrl;
-            sendMessage(payload);
+            resolve(tab.favIconUrl);
         });
     });
+}
+
+// returns false if cannot create port
+function checkPort() {
+    if (port != null) return true;
+
+    return connectPort();
 }
 
 function connectPort() {
     console.log("launching messenger");
     port = chrome.runtime.connectNative("vangard.fukurou.ext.msg");
+    if (port == null) return false;
     port.onDisconnect.addListener(function() {
         port = null;
     });
     port.onMessage.addListener(function(msg) {
         receiveMessage(msg);
     });
+
+    return true;
 }
 
 /*
@@ -158,7 +206,11 @@ function receiveMessage(response) {
             }
             break;
         case "resend": // --- RESEND ---
-            console.log("RESENDING");
+            if (!response.hasOwnProperty("srcUrl")) {
+                console.log("No srcUrl for requested resend", response);
+                return;
+            }
+            console.log("Resending: ", response);
             response.task = response.type;
             delete response.type;
             sendMessage(response);
@@ -175,6 +227,13 @@ function receiveMessage(response) {
 
 // send message to fukurou host application
 function sendMessage(payload) {
+    if (payload.task === "save") {
+        if (!payload.hasOwnProperty("srcUrl") || !payload.hasOwnProperty("pageUrl")) {
+            console.log("download doesn't have all required information", payload);
+            return;
+        }
+    }
+
     //console.log(payload);
     if (port == null) {
         connectPort();
@@ -188,7 +247,7 @@ function createMenu(folder, uid) {
         title: "Add to: " + folder,
         contexts: ["all"],
         onclick: function(info) {
-            console.log(info);
+            //console.log(info);
             processDownload(info, uid);
         }
     });
@@ -371,6 +430,17 @@ function createDefaultMenus() {
                 console.log(params);
                 var test = encodeURIComponent(JSON.stringify(params));
                 var url = "https://exhentai.org/?" + $.param(params);
+                openUrl(url, false);
+            }
+        })
+    );
+    activeMenus.push(
+        chrome.contextMenus.create({
+            title: "Hentai.cafe Search",
+            contexts: ["selection"],
+            onclick: function(info) {
+                var params = { s: info.selectionText };
+                var url = "https://hentai.cafe/?" + $.param(params);
                 openUrl(url, false);
             }
         })
