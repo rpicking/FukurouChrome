@@ -201,6 +201,29 @@
         for (var i = 0; i < folders.length; ++i) {
             addElement(folders[i]["name"], folders[i]["uid"]);
         }
+
+        $('#openUrls').click(function() {
+            var text = $('#urlsList').val();
+            var urls = text.split("\n");
+
+            for (var i = urls.length - 1; i >= 0; --i) {
+                var url = urls[i].trim();
+                
+                if (url === "") {
+                    urls.splice(i, 1);
+                    continue;
+                }
+
+                urls[i] = url;
+            }
+
+            if (urls.length <= 0) return;
+            // open tabs in new window
+            sendMessage({
+                task: "open_urls",
+                urls: urls
+            });
+        });
     }
 
     start();

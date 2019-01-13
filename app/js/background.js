@@ -16,6 +16,9 @@ chrome.runtime.onMessage.addListener(async function(request, sender, sendRespons
         case "refresh_twitch":
             refreshTwitch();
             break;
+        case "open_urls":
+            openUrls(request.urls);
+            break;
         default:
             sendMessage(request);
             break;
@@ -34,6 +37,17 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
         }
     }
 });
+
+function openUrls(urls) {
+    chrome.windows.create({url: urls[0]}, function(newWindow) {
+        for (var i = 1; i < urls.length; ++i) {
+            chrome.tabs.create({
+                windowId: newWindow.id,
+                url: urls[i]
+            });
+        }
+    });
+}
 
 function save_request(request) {
     if (!checkPort()) {

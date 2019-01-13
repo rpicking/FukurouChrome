@@ -37,6 +37,9 @@
                             <a href="#Favorites">Favorites</a>
                         </li>
                         <li role="presentation">
+                            <a href="#Urls">Open Urls</a>
+                        </li>
+                        <li role="presentation">
                             <a href="#History">History</a>
                         </li>
                         <li role="presentation">
@@ -224,6 +227,11 @@
                         <div class="tab-pane" id="History">
                             <h3>Placeholder for FukurouViewer history integration (currently only available in application)</h3>
                         </div>
+                        <div class="tab-pane" id="Urls">
+                            <label>Urls</label>
+                            <textarea class="form-control" rows="10" id="urlsList"></textarea>
+                            <button id="openUrls" class="btn btn-primary">Open Urls</button>
+                        </div>
                         <div class="tab-pane" id="Scripts">
                             <input id="content-scripts" type="file" name="content-scripts[]" multiple/>
                         </div>
@@ -233,7 +241,7 @@
         </div>
     </div>
 
-    <script src="js/jquery.min.js"></script>
+    <script src="js/jquery-3.3.1.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="js/options.js"></script>
