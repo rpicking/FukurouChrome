@@ -415,7 +415,7 @@ function createDefaultMenus() {
     );
 
     // text searching
-    chrome.contextMenus.create({ type: "separator", contexts: ["selection"] });
+    chrome.contextMenus.create({ type: "separator" });
 
     activeMenus.push(
         chrome.contextMenus.create({
@@ -530,6 +530,9 @@ function refreshTwitch() {
 function init() {
     chrome.browserAction.setBadgeBackgroundColor({ color: [14, 45, 199, 255] });
     chrome.browserAction.setBadgeText({ text: "0" });
+
+    // create default context menus (incas)
+    createDefaultMenus();
 
     // connect to host messenger
     connectPort();
