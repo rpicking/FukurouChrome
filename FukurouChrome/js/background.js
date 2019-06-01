@@ -6,12 +6,15 @@ chrome.notifications.onClicked.addListener(function(id) {
 });
 
 // listen for messages from other scripts
-chrome.runtime.onMessage.addListener(async function(request, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     console.log("From tab: ", request);
     switch (request.task) {
         case "save":
-            request.favicon_url = await getFaviconUrl(sender.tab.id);
-            save_request(request);
+            //request.favicon_url = await getFaviconUrl(sender.tab.id);
+            save_request(request, sender.tab.id);
+            break;
+        case "save_manga":
+            saveManga(request.url);
             break;
         case "refresh_twitch":
             refreshTwitch();
@@ -19,10 +22,14 @@ chrome.runtime.onMessage.addListener(async function(request, sender, sendRespons
         case "open_urls":
             openUrls(request.urls);
             break;
+        case "request":
+            sendRequest(request, sendResponse);
+            break;
         default:
             sendMessage(request);
             break;
     }
+    return true;
 });
 
 chrome.storage.onChanged.addListener(function(changes, namespace) {
@@ -38,6 +45,19 @@ chrome.storage.onChanged.addListener(function(changes, namespace) {
     }
 });
 
+function sendRequest(request, sendResponse) {
+    var xhr = new XMLHttpRequest();
+    xhr.open(request.type, request.url, true);
+    xhr.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+    
+    xhr.onloadend = function() {
+        sendResponse({response: JSON.parse(xhr.response)});
+    }
+
+    xhr.send(JSON.stringify(request.data));
+}
+
+
 function openUrls(urls) {
     chrome.windows.create({url: urls[0]}, function(newWindow) {
         for (var i = 1; i < urls.length; ++i) {
@@ -49,7 +69,11 @@ function openUrls(urls) {
     });
 }
 
-function save_request(request) {
+async function save_request(request, tab_id) {
+    // get favicon
+    if (tab_id !== undefined)
+        request.favicon_url = await getFaviconUrl(tab_id);
+
     if (!checkPort()) {
         console.log("Save for later")
         chrome.storage.sync.get(["downloads"], async function(result) {
@@ -390,6 +414,14 @@ function openUrl(url, srcUrl) {
     });
 }
 
+function saveManga(url) {
+    payload = {
+        task: "saveManga",
+        url: url
+    };
+    sendMessage(payload);
+}
+
 function createDefaultMenus() {
     // manga processing
     chrome.contextMenus.create({
@@ -405,11 +437,12 @@ function createDefaultMenus() {
             documentUrlPatterns: supportedSites,
             onclick: function(info) {
                 //console.log(info);
-                payload = {
-                    task: "saveManga",
-                    url: info.pageUrl
-                };
-                sendMessage(payload);
+                saveManga(info.pageUrl);
+                // payload = {
+                //     task: "saveManga",
+                //     url: info.pageUrl
+                // };
+                // sendMessage(payload);
             }
         })
     );

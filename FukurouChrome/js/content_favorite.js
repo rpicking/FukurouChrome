@@ -3,15 +3,16 @@ function setupEhentai() {
     // create flags
     var style = document.createElement("style");
     style.innerHTML =
-        ".eh_flag {overflow: visible; position: absolute; height: 35px; top: 0px; right: 0px; }" +
+        ".eh_flag {overflow: visible; position: absolute; height: 35px; top: 0px; right: 0px; z-index: 100; }" +
         ".eh_flag_small {height: 23px; border-radius: 5px; margin-left: 6px; position: relative;}" +
+        ".flag-container { position: relative; }" +
         ".itd {position: relative}" +
         ".it5 a {overflow: hidden; max-width: 652px; max-height: 30px; white-space: nowrap; text-overflow: ellipsis; display: block;}" +
         ".gtr0 .it5 a:hover {overflow: visible; white-space: normal; position: absolute; max-height: auto; max-width: 786px; z-index: 99999; background-color: #4f535b;}" +
         ".gtr1 .it5 a:hover {overflow: visible; white-space: normal; position: absolute; max-height: auto; max-width: 786px; z-index: 99999; background-color: #363940;}";
 
     document.head.appendChild(style);
-    placeFlags(["gtr0", "gtr1", "id1"], eh_api_url);
+    placeFlags(["gl1t", "gtr1", "id1"], eh_api_url);
 
     // last item in gallery returns to gallery page
     var cur_url = window.location.href;
@@ -25,7 +26,8 @@ function setupEhentai() {
 function checkPageNumber() {
     var pages = document.getElementById("i4").getElementsByTagName("span");
     if (pages[0].innerText === pages[1].innerText) {
-        var gal_url = document.getElementById("i5").getElementsByTagName("a")[0].href;
+        var gal_url = document.getElementById("i5").getElementsByTagName("a")[0]
+            .href;
         window.location.href = gal_url;
     }
 }
@@ -43,8 +45,9 @@ function parseEhentai(srcUrl, pageUrl, uid, apiUrl) {
         gal = document.getElementById("i5");
         if (gal) {
             // currently in gallery slideshow
-            galleryUrl = gal.getElementsByClassName("sb")[0].getElementsByTagName("a")[0]
-                .href;
+            galleryUrl = gal
+                .getElementsByClassName("sb")[0]
+                .getElementsByTagName("a")[0].href;
             bestimg = document.getElementById("i7").getElementsByTagName("a");
             if (bestimg.length > 0) {
                 srcUrl = bestimg[0].href; //update srcUrl to larger image
@@ -105,9 +108,9 @@ function parseTumblr(info, uid) {
                     srcUrl = info.linkUrl;
                     if (!isFile) {
                         // larger file modal
-                        var larger_image = $('a[href="' + info.linkUrl + '"]').attr(
-                            "data-big-photo"
-                        );
+                        var larger_image = $(
+                            'a[href="' + info.linkUrl + '"]'
+                        ).attr("data-big-photo");
                         if (larger_image) {
                             srcUrl = larger_image;
                         } else {
@@ -286,7 +289,7 @@ function parseTwitter(info, uid) {
 
     // in gallery
     if (srcUrl === undefined) {
-        var mediaContainer = $('.Gallery-content .Gallery-media');
+        var mediaContainer = $(".Gallery-content .Gallery-media");
         var content = mediaContainer.children()[0];
         srcUrl = content.getAttribute("src");
     }
@@ -327,15 +330,10 @@ function check_if_file(url) {
 
 // Makes request to apiUrl with package data
 function send_req(apiUrl, data) {
-    return new Promise(function(resolve, reject) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", apiUrl, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                resolve(JSON.parse(xhr.responseText));
-            }
-        };
-        xhr.send(JSON.stringify(data));
+    return new Promise((resolve, reject) => {
+        chrome.runtime.sendMessage({task: "request", type: "POST", url: apiUrl, data: data}, function(response) {
+            resolve(response.response);
+        });
     });
 }
 
@@ -372,9 +370,9 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     sendResponse({ status: "Received" });
     if (request.task === "download") {
         var pageUrl = request.info.pageUrl;
-        var domain = pageUrl.replace('http://','').replace('https://','').replace('www.','').split(/[/?#]/)[0];
+        var domain = getDomainFromUrl(pageUrl);
 
-        switch(domain) {
+        switch (domain) {
             case "exhentai.org": {
                 parseEhentai(
                     request.info.srcUrl,
@@ -385,9 +383,14 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
                 break;
             }
             case "e-hentai.org": {
-                parseEhentai(request.srcUrl, request.pageUrl, request.uid, eh_api_url);
+                parseEhentai(
+                    request.info.srcUrl,
+                    request.info.pageUrl,
+                    request.uid,
+                    eh_api_url
+                );
                 break;
-            }                
+            }
             case "tumblr.com": {
                 parseTumblr(request.info, request.uid);
                 break;
@@ -513,6 +516,14 @@ function redirectEH(settings, url) {
     }
 }
 
+function getDomainFromUrl(url) {
+    return url
+            .replace("https://", "")
+            .replace("http://", "")
+            .replace("www.", "")
+            .split(/[/?#]/)[0];
+}
+
 // redirects current window to destination
 function redirectPage(destination, wait) {
     console.log("Redirecting");
@@ -593,7 +604,7 @@ function placeFlags(classes, apiUrl) {
             var anchor = e.getElementsByClassName("it5")[0];
             if (!anchor) {
                 // not in list view
-                anchor = e.getElementsByClassName("id3")[0];
+                anchor = e.getElementsByClassName("gl3t")[0];
             }
             anchor = anchor.firstElementChild.href.split("/");
             return [anchor[4], anchor[5]];
@@ -644,19 +655,22 @@ function placeFlag(e, language) {
     if (!language || language === "speechless") {
         return;
     }
-
+    // container is needed to absolute position flag inside of the cover image flex item
+    var flag_container = document.createElement("div");
+    flag_container.classList.add("flag-container");
     var flag = document.createElement("img");
     flag.classList.add("eh_flag");
     flag.src = chrome.extension.getURL("flags/" + language + ".svg");
 
-    var target = e.querySelector(".id3 > a");
+    var target = e.querySelector(".gl1t > .gl3t");
 
     if (!target) {
         target = e.querySelector(".itd");
         flag.classList.add("eh_flag_small");
     }
-
-    target.appendChild(flag);
+    
+    flag_container.appendChild(flag);
+    target.prepend(flag_container);
 }
 
 var eh_api_url = "https://e-hentai.org/api.php";
@@ -674,35 +688,60 @@ var hovered;
 
 $(document).ready(function() {
     var url = document.URL;
-    if (url.indexOf("e-hentai.org") > -1) {
-        setupEhentai();
+    var domain = getDomainFromUrl(url);
 
-        // redirect to ex based on setting
-        chrome.storage.local.get(null, function(item) {
-            if (item.redirectEH) {
-                redirectEH(item, url);
+    switch(domain) {
+        case "exhentai.org": {
+            setupEhentai();
+        }
+        case "e-hentai.org": {
+            // redirect to ex based on setting
+            chrome.storage.local.get(null, function(item) {
+                if (item.redirectEH) {
+                    redirectEH(item, url);
+                }
+            });
+            break;
+        }
+        case "tumblr.com": {
+            // add hovering for iframes
+            if (window.location.hostname.indexOf("tumblr.com") === -1) return;
+            var frames = document.getElementsByTagName("iframe");
+            for (var i = 0; i < frames.length; ++i) {
+                id = frames[i].getAttribute("id");
+                if (id && id !== "ga_target") {
+                    frames[i].contentWindow.document.addEventListener(
+                        "contextmenu",
+                        function(e) {
+                            hovered = e;
+                        },
+                        true
+                    );
+                }
             }
-        });
-        return;
-    } else if (url.indexOf("exhentai.org") > -1) {
-        setupEhentai();
-        return;
-    } else if (url.indexOf("tumblr.com") > -1) {    // add hovering for iframes
-        if (window.location.hostname.indexOf("tumblr.com") === -1) return;
-        var frames = document.getElementsByTagName("iframe");
-        for (var i = 0; i < frames.length; ++i) {
-            id = frames[i].getAttribute("id");
-            if (id && id !== "ga_target") {
-                frames[i].contentWindow.document.addEventListener(
-                    "contextmenu",
-                    function(e) {
-                        hovered = e;
-                    },
-                    true
-                );
-            }
+            break;
+        }
+        case "hentai.cafe": {
+            var button_container = $('.entry-content.content > .last > p');
+            if (button_container === null) break;
+
+            // Read button to copy look
+            var mimic_btn = button_container.find("a[title='Read']");
+            
+            var download_btn = $("<button>", {
+                class: mimic_btn.attr('class'),
+                text: "Download"
+            });
+
+            button_container.append(download_btn);
+
+            download_btn.click(function() {
+                chrome.runtime.sendMessage({task: "save_manga", url: document.URL});
+                download_btn.blur();
+            });
         }
     }
+
 
     // tumblr video volume control
     // get all iframes
